@@ -1,1 +1,49 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>حسابي | ضمانك</title><link rel="stylesheet" href="/assets/css/style.css"></head><body><div data-header></div><main class="container"><form class="form card" id="profile"><h1>حسابي</h1><label>الاسم<input name="full_name"></label><label>الجوال<input name="phone"></label><button>حفظ</button><hr><h2>التحقق عبر نفاذ</h2><label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10"></label><button type="button" id="nafath">بدء التحقق</button><p id="msg"></p></form></main><div data-footer></div><script type="module" src="/assets/js/app.js"></script><script type="module">import{api}from'/assets/js/api.js';const f=document.querySelector('#profile'),m=document.querySelector('#msg');try{const p=await api('/account');f.full_name.value=p.full_name||'';f.phone.value=p.phone||'';m.textContent=p.nafath_verified?'موثق عبر نفاذ ✓':''}catch(e){m.textContent=e.message}f.onsubmit=async e=>{e.preventDefault();await api('/account',{method:'PUT',body:JSON.stringify({full_name:f.full_name.value,phone:f.phone.value})});m.textContent='تم الحفظ'};document.querySelector('#nafath').onclick=async()=>{try{const x=await api('/auth/verify-nafath',{method:'POST',body:JSON.stringify({national_id:f.national_id.value})});m.textContent=`افتح تطبيق نفاذ واختر الرقم ${x.random}. رقم الطلب ${x.request_id}`;localStorage.setItem('nafath_request',JSON.stringify(x))}catch(e){m.textContent=e.message}}</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>حسابي | ضمانك</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+  <main class="container">
+    <form class="form card" id="profile">
+      <h1>حسابي</h1>
+      <label>الاسم<input name="full_name"></label>
+      <label>الجوال<input name="phone"></label>
+      <button>حفظ</button>
+      <hr>
+      <h2>التحقق عبر نفاذ</h2>
+      <label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10"></label>
+      <button type="button" id="nafath">بدء التحقق</button>
+      <p id="msg"></p>
+    </form>
+  </main>
+  <div data-footer></div>
+  <script type="module" src="/assets/js/app.js"></script>
+  <script type="module">
+    import { api } from '/assets/js/api.js';
+    const f = document.querySelector('#profile'), m = document.querySelector('#msg');
+    try {
+      const p = await api('/account');
+      f.full_name.value = p.full_name || '';
+      f.phone.value = p.phone || '';
+      m.textContent = p.nafath_verified ? 'موثق عبر نفاذ ✓' : '';
+    } catch(e) { m.textContent = e.message; }
+    f.onsubmit = async e => {
+      e.preventDefault();
+      await api('/account', { method: 'PUT', body: JSON.stringify({ full_name: f.full_name.value, phone: f.phone.value }) });
+      m.textContent = 'تم الحفظ';
+    };
+    document.querySelector('#nafath').onclick = async () => {
+      try {
+        const x = await api('/auth/verify-nafath', { method: 'POST', body: JSON.stringify({ national_id: f.national_id.value }) });
+        m.textContent = `افتح تطبيق نفاذ واختر الرقم ${x.random}. رقم الطلب ${x.request_id}`;
+        localStorage.setItem('nafath_request', JSON.stringify(x));
+      } catch(e) { m.textContent = e.message; }
+    };
+  </script>
+</body>
+</html>
