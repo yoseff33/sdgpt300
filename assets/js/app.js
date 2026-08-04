@@ -1,5 +1,10 @@
 import { api, money, token } from './api.js';
 
+// ==============================
+// عنوان الخادم الخلفي (غيّره حسب الحاجة)
+// ==============================
+const API_BASE_URL = 'https://sdgpt300.onrender.com'; // استخدم الرابط الجديد
+
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
@@ -382,9 +387,6 @@ function initProductForm() {
   const form = document.getElementById('createProductForm');
   if (!form) return;
 
-  // تحديد عنوان الخادم الخلفي (غيّر المنفذ حسب إعدادك)
-  const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000'; // <--- غيّر الرقم إلى منفذ الخادم الفعلي
-
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -400,19 +402,21 @@ function initProductForm() {
       }
 
       const formData = new FormData(form);
+
       // استخدام المسار الكامل مع API_BASE_URL
-const API_BASE_URL = window.API_BASE_URL || 'https://sdgpt300.onrender.com'; // <-- استخدم الرابط الجديد        method: 'POST',
+      const res = await fetch(`${API_BASE_URL}/api/products`, {
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${tok}` },
         body: formData
       });
 
-      // محاولة قراءة الرد كـ JSON، وإذا فشل نعطي خطأ واضح
+      // محاولة قراءة الرد كـ JSON، وإذا فشل نعطي رسالة واضحة
       let result;
       const text = await res.text();
       try {
         result = JSON.parse(text);
       } catch {
-        throw new Error('الخادم أعاد استجابة غير صالحة (تأكد من تشغيل الخادم الخلفي على المنفذ الصحيح)');
+        throw new Error('الخادم أعاد استجابة غير صالحة (تأكد من تشغيل الخادم الخلفي)');
       }
 
       if (!res.ok) throw new Error(result.error || 'حدث خطأ أثناء النشر');
