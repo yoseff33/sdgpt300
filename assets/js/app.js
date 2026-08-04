@@ -204,7 +204,7 @@ async function productPage() {
       try {
         const transaction = await api('/transactions', {
           method: 'POST',
-          body: JSON.stringify({ product_id: product.id, seller_id: product.seller_id, amount: product.price, inspection_hours: product.inspection_hours || 24 })
+          body: JSON.stringify({ product_id: product.id, inspection_hours: product.inspection_hours || 24 })
         });
         location.href = `transaction.html?id=${encodeURIComponent(transaction.id)}`;
       } catch (error) { toast(error.message, 'error'); }
