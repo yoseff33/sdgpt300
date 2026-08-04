@@ -1,25 +1,28 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const path = require('path');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // استدعاء ملفات الـ Routes
-const authRoutes = require('./routes/auth');
-const products = require('./routes/products');
-const transactions = require('./routes/transactions');
-const payments = require('./routes/payments');
-const adminRoutes = require('./routes/admin');
-const support = require('./routes/support');
-const manager = require('./routes/manager');
-const notifications = require('./routes/notifications');
-const account = require('./routes/account');
+import authRoutes from './routes/auth.js';
+import products from './routes/products.js';
+import transactions from './routes/transactions.js';
+import payments from './routes/payments.js';
+import adminRoutes from './routes/admin.js';
+import support from './routes/support.js';
+import manager from './routes/manager.js';
+import notifications from './routes/notifications.js';
+import account from './routes/account.js';
 
 // استدعاء عميل Supabase للتحقق من الاتصال عند التشغيل
-const { admin } = require('./utils/supabase');
+import { admin } from './utils/supabase.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const frontendRoot = path.resolve(__dirname, '..');
 
 const allowedOrigins = (process.env.APP_URL || '')
