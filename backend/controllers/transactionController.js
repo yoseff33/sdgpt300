@@ -1,8 +1,184 @@
-import {admin} from '../utils/supabase.js';import {analyzeTransaction} from '../utils/fraudDetection.js';
-const notify=async(ids,message)=>admin.from('notifications').insert([...new Set(ids.filter(Boolean))].map(user_id=>({user_id,message})));
-export async function create(req,res){const b=req.body;const tx={product_id:b.product_id||null,buyer_id:b.buyer_id||req.user.id,seller_id:b.seller_id,amount:Number(b.amount),description:b.description,inspection_hours:Number(b.inspection_hours||24),status:'pending_payment'};if(tx.buyer_id===tx.seller_id)return res.status(422).json({error:'لا يمكن أن يكون المشتري هو البائع'});const{data,error}=await admin.from('transactions').insert(tx).select().single();if(error)throw error;await analyzeTransaction(data);res.status(201).json({...data,share_url:`${process.env.APP_URL}/transaction.html?id=${data.id}`});}
-export async function list(req,res){let q=admin.from('transactions').select('*,product:products(title,image_url)').order('created_at',{ascending:false});if(!['admin','manager','support'].includes(req.user.role))q=q.or(`buyer_id.eq.${req.user.id},seller_id.eq.${req.user.id}`);if(req.query.role==='buyer')q=q.eq('buyer_id',req.user.id);if(req.query.role==='seller')q=q.eq('seller_id',req.user.id);const{data,error}=await q;if(error)throw error;res.json(data);}
-export async function get(req,res){const{data,error}=await admin.from('transactions').select('*,product:products(*),buyer:profiles!transactions_buyer_id_fkey(full_name),seller:profiles!transactions_seller_id_fkey(full_name),disputes(*)').eq('id',req.params.id).single();if(error)throw Object.assign(error,{status:404});if(!['admin','manager','support'].includes(req.user.role)&&![data.buyer_id,data.seller_id].includes(req.user.id))return res.status(403).json({error:'ليس لديك صلاحية'});res.json(data);}
-async function status(req,res,nextStatus,party){const{data:tx}=await admin.from('transactions').select('*').eq('id',req.params.id).single();if(!tx||tx[`${party}_id`]!==req.user.id)return res.status(403).json({error:'ليس لديك صلاحية'});if(nextStatus==='completed'){const{count}=await admin.from('disputes').select('id',{count:'exact',head:true}).eq('transaction_id',tx.id).eq('status','open');if(count)return res.status(409).json({error:'يوجد نزاع مفتوح'});}const{data,error}=await admin.from('transactions').update({status:nextStatus}).eq('id',tx.id).select().single();if(error)throw error;await notify([tx.buyer_id,tx.seller_id],`تحديث المعاملة ${tx.id}: ${nextStatus}`);res.json(data);}
-export const ship=(req,res)=>status(req,res,'shipped','seller');export const confirmReceipt=(req,res)=>status(req,res,'completed','buyer');
-export async function dispute(req,res){const{data:tx}=await admin.from('transactions').select('*').eq('id',req.params.id).single();if(!tx||![tx.buyer_id,tx.seller_id].includes(req.user.id))return res.status(403).json({error:'ليس لديك صلاحية'});const{data,error}=await admin.from('disputes').insert({transaction_id:tx.id,raised_by:req.user.id,reason:req.body.reason,description:req.body.description}).select().single();if(error)throw error;await admin.from('transactions').update({status:'disputed'}).eq('id',tx.id);await notify([tx.buyer_id,tx.seller_id],'تم فتح نزاع على المعاملة');res.status(201).json(data);}
+import { admin } from '../utils/supabase.js';
+import { analyzeTransaction } from '../utils/fraudDetection.js';
+
+const COMMISSION_RATE = Number(process.env.COMMISSION_RATE || 0.03);
+const MIN_INSPECTION_HOURS = 1;
+const MAX_INSPECTION_HOURS = 168;
+
+const notify = async (ids, message) => {
+  const recipients = [...new Set(ids.filter(Boolean))];
+  if (!recipients.length) return;
+  const { error } = await admin.from('notifications').insert(
+    recipients.map(user_id => ({ user_id, message }))
+  );
+  if (error) throw error;
+};
+
+export async function create(req, res) {
+  const productId = req.body.product_id;
+  if (!productId) return res.status(422).json({ error: 'حدد المنتج أولاً' });
+
+  const { data: product, error: productError } = await admin
+    .from('products')
+    .select('id,title,price,seller_id,inspection_hours,status,quantity')
+    .eq('id', productId)
+    .single();
+
+  if (productError || !product) return res.status(404).json({ error: 'المنتج غير موجود' });
+  if (product.status && product.status !== 'active') return res.status(409).json({ error: 'المنتج غير متاح حالياً' });
+  if (Number(product.quantity ?? 1) < 1) return res.status(409).json({ error: 'المنتج غير متوفر حالياً' });
+  if (product.seller_id === req.user.id) return res.status(422).json({ error: 'ما تقدر تشتري منتجك' });
+
+  const amount = Number(product.price);
+  if (!Number.isFinite(amount) || amount <= 0) return res.status(422).json({ error: 'سعر المنتج غير صالح' });
+
+  const requestedHours = Number(req.body.inspection_hours || product.inspection_hours || 24);
+  const inspectionHours = Math.min(MAX_INSPECTION_HOURS, Math.max(MIN_INSPECTION_HOURS, requestedHours));
+  const commission = Number((amount * COMMISSION_RATE).toFixed(2));
+
+  const transaction = {
+    product_id: product.id,
+    buyer_id: req.user.id,
+    seller_id: product.seller_id,
+    amount,
+    commission,
+    description: product.title,
+    inspection_hours: inspectionHours,
+    status: 'pending_payment'
+  };
+
+  const { data, error } = await admin
+    .from('transactions')
+    .insert(transaction)
+    .select()
+    .single();
+
+  if (error) throw error;
+  await analyzeTransaction(data);
+
+  const appUrl = (process.env.APP_URL || '').split(',')[0].replace(/\/$/, '');
+  res.status(201).json({
+    ...data,
+    share_url: appUrl ? `${appUrl}/transaction.html?id=${data.id}` : undefined
+  });
+}
+
+export async function list(req, res) {
+  let query = admin
+    .from('transactions')
+    .select('*,product:products(title,image_url)')
+    .order('created_at', { ascending: false });
+
+  if (!['admin', 'manager', 'support'].includes(req.user.role)) {
+    query = query.or(`buyer_id.eq.${req.user.id},seller_id.eq.${req.user.id}`);
+  }
+  if (req.query.role === 'buyer') query = query.eq('buyer_id', req.user.id);
+  if (req.query.role === 'seller') query = query.eq('seller_id', req.user.id);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  res.json(data);
+}
+
+export async function get(req, res) {
+  const { data, error } = await admin
+    .from('transactions')
+    .select('*,product:products(*),buyer:profiles!transactions_buyer_id_fkey(full_name),seller:profiles!transactions_seller_id_fkey(full_name),disputes(*)')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !data) return res.status(404).json({ error: 'الصفقة غير موجودة' });
+  if (!['admin', 'manager', 'support'].includes(req.user.role) && ![data.buyer_id, data.seller_id].includes(req.user.id)) {
+    return res.status(403).json({ error: 'ليس لديك صلاحية' });
+  }
+  res.json(data);
+}
+
+async function updateStatus(req, res, expectedStatus, nextStatus, party) {
+  const { data: transaction, error: fetchError } = await admin
+    .from('transactions')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (fetchError || !transaction) return res.status(404).json({ error: 'الصفقة غير موجودة' });
+  if (transaction[`${party}_id`] !== req.user.id) return res.status(403).json({ error: 'ليس لديك صلاحية' });
+  if (transaction.status !== expectedStatus) return res.status(409).json({ error: 'حالة الصفقة ما تسمح بهالإجراء' });
+
+  if (nextStatus === 'completed') {
+    const { count, error: disputeError } = await admin
+      .from('disputes')
+      .select('id', { count: 'exact', head: true })
+      .eq('transaction_id', transaction.id)
+      .eq('status', 'open');
+    if (disputeError) throw disputeError;
+    if (count) return res.status(409).json({ error: 'يوجد نزاع مفتوح' });
+  }
+
+  const changes = { status: nextStatus };
+  if (nextStatus === 'shipped') {
+    changes.inspection_deadline = new Date(
+      Date.now() + Number(transaction.inspection_hours || 24) * 3_600_000
+    ).toISOString();
+  }
+
+  const { data, error } = await admin
+    .from('transactions')
+    .update(changes)
+    .eq('id', transaction.id)
+    .eq('status', expectedStatus)
+    .select()
+    .single();
+
+  if (error) throw error;
+  await notify([transaction.buyer_id, transaction.seller_id], `تحديث الصفقة: ${nextStatus}`);
+  res.json(data);
+}
+
+export const ship = (req, res) => updateStatus(req, res, 'funds_held', 'shipped', 'seller');
+export const confirmReceipt = (req, res) => updateStatus(req, res, 'shipped', 'completed', 'buyer');
+
+export async function dispute(req, res) {
+  const reason = String(req.body.reason || '').trim();
+  const description = String(req.body.description || reason).trim();
+  if (reason.length < 5) return res.status(422).json({ error: 'وضح المشكلة بشكل مختصر' });
+
+  const { data: transaction, error: fetchError } = await admin
+    .from('transactions')
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+
+  if (fetchError || !transaction) return res.status(404).json({ error: 'الصفقة غير موجودة' });
+  if (![transaction.buyer_id, transaction.seller_id].includes(req.user.id)) {
+    return res.status(403).json({ error: 'ليس لديك صلاحية' });
+  }
+  if (!['funds_held', 'shipped'].includes(transaction.status)) {
+    return res.status(409).json({ error: 'حالة الصفقة ما تسمح بفتح نزاع' });
+  }
+
+  const { count, error: countError } = await admin
+    .from('disputes')
+    .select('id', { count: 'exact', head: true })
+    .eq('transaction_id', transaction.id)
+    .eq('status', 'open');
+  if (countError) throw countError;
+  if (count) return res.status(409).json({ error: 'فيه نزاع مفتوح على الصفقة بالفعل' });
+
+  const { data, error } = await admin
+    .from('disputes')
+    .insert({ transaction_id: transaction.id, raised_by: req.user.id, reason, description })
+    .select()
+    .single();
+  if (error) throw error;
+
+  const { error: updateError } = await admin
+    .from('transactions')
+    .update({ status: 'disputed' })
+    .eq('id', transaction.id)
+    .in('status', ['funds_held', 'shipped']);
+  if (updateError) throw updateError;
+
+  await notify([transaction.buyer_id, transaction.seller_id], 'تم فتح مشكلة على الصفقة');
+  res.status(201).json(data);
+}
