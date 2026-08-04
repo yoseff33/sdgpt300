@@ -33,14 +33,13 @@ const allowedOrigins = (process.env.APP_URL || '')
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 
+// ------------------ تعديل CORS هنا ------------------
 app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
-      return callback(null, true);
-    }
-    return callback(Object.assign(new Error('مصدر الطلب غير مسموح'), { status: 403 }));
-  }
+  origin: '*', // السماح لكل النطاقات (عدّل عند الانتهاء من التطوير)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+// ----------------------------------------------------
 
 app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8' }));
 
@@ -89,7 +88,7 @@ const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
   console.log(`Damanak server running on http://localhost:${port}`);
   
-  // فحص الاتصال بقواعد بيانات Supabase فور تشغيل السيرفر
+  // فحص الاتصال بقواعد بيانات Supabase
   admin.from('products').select('count', { count: 'exact', head: true })
     .then(({ error }) => {
       if (error) {
@@ -99,4 +98,13 @@ app.listen(port, () => {
       }
     })
     .catch(err => console.error('❌ Supabase test error:', err.message));
+});
+
+// إضافة معالج للأخطاء غير المعالجة لمنع انهيار الخادم
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
 });
