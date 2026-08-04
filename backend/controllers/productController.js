@@ -9,7 +9,8 @@ const ALLOWED_FIELDS = [
   'quantity',
   'inspection_hours',
   'city',
-  'condition'
+  'condition',
+  'external_url' // <--- تمت الإضافة
 ];
 
 function cleanProductPayload(body, { partial = false } = {}) {
@@ -31,6 +32,9 @@ function cleanProductPayload(body, { partial = false } = {}) {
   if (payload.category !== undefined) payload.category = String(payload.category || '').trim().slice(0, 80);
   if (payload.city !== undefined) payload.city = String(payload.city || '').trim().slice(0, 80);
   if (payload.condition !== undefined) payload.condition = String(payload.condition || '').trim().slice(0, 30);
+  if (payload.external_url !== undefined) {
+    payload.external_url = String(payload.external_url || '').trim().slice(0, 500);
+  }
 
   if (!partial || payload.price !== undefined) {
     payload.price = Number(payload.price);
@@ -82,9 +86,10 @@ export async function get(req, res) {
 }
 
 export async function create(req, res) {
-  if (!req.user.profile?.nafath_verified) {
-    return res.status(403).json({ error: 'يلزم التحقق عبر نفاذ قبل البيع' });
-  }
+  // التحقق من نفاذ (اختياري، علق الشرط إذا أردت السماح للجميع)
+  // if (!req.user.profile?.nafath_verified) {
+  //   return res.status(403).json({ error: 'يلزم التحقق عبر نفاذ قبل البيع' });
+  // }
 
   const payload = cleanProductPayload(req.body);
   let imageUrl = null;
