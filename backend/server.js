@@ -1,23 +1,27 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import authRoutes from './routes/auth.js';
-import products from './routes/products.js';
-import transactions from './routes/transactions.js';
-import payments from './routes/payments.js';
-import admin from './routes/admin.js';
-import support from './routes/support.js';
-import manager from './routes/manager.js';
-import notifications from './routes/notifications.js';
-import account from './routes/account.js';
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+// استدعاء ملفات الـ Routes
+const authRoutes = require('./routes/auth');
+const products = require('./routes/products');
+const transactions = require('./routes/transactions');
+const payments = require('./routes/payments');
+const adminRoutes = require('./routes/admin');
+const support = require('./routes/support');
+const manager = require('./routes/manager');
+const notifications = require('./routes/notifications');
+const account = require('./routes/account');
+
+// استدعاء عميل Supabase للتحقق من الاتصال عند التشغيل
+const { admin } = require('./utils/supabase');
 
 const app = express();
-const backendDir = path.dirname(fileURLToPath(import.meta.url));
-const frontendRoot = path.resolve(backendDir, '..');
+const frontendRoot = path.resolve(__dirname, '..');
+
 const allowedOrigins = (process.env.APP_URL || '')
   .split(',')
   .map(value => value.trim().replace(/\/$/, ''))
@@ -25,6 +29,7 @@ const allowedOrigins = (process.env.APP_URL || '')
 
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
+
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
@@ -33,7 +38,9 @@ app.use(cors({
     return callback(Object.assign(new Error('مصدر الطلب غير مسموح'), { status: 403 }));
   }
 }));
+
 app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-8' }));
+
 app.use(express.json({
   limit: '1mb',
   verify(req, _res, buffer) {
@@ -41,18 +48,22 @@ app.use(express.json({
   }
 }));
 
+// إعداد المسارات API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', products);
 app.use('/api/transactions', transactions);
 app.use('/api/payments', payments);
-app.use('/api/admin', admin);
+app.use('/api/admin', adminRoutes);
 app.use('/api/support', support);
 app.use('/api/manager', manager);
 app.use('/api/notifications', notifications);
 app.use('/api/account', account);
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// خدمة الملفات الثابتة والفرونت إند
 app.use(express.static(frontendRoot, { index: false }));
+
 app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
     return res.sendFile(path.join(frontendRoot, 'index.html'));
@@ -60,6 +71,7 @@ app.use((req, res, next) => {
   return next();
 });
 
+// معالجة الأخطاء
 app.use((err, _req, res, _next) => {
   console.error(err);
   const status = Number(err.status) || 500;
@@ -70,4 +82,18 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`Damanak http://localhost:${port}`));
+
+app.listen(port, () => {
+  console.log(`Damanak server running on http://localhost:${port}`);
+  
+  // فحص الاتصال بقواعد بيانات Supabase فور تشغيل السيرفر
+  admin.from('products').select('count', { count: 'exact', head: true })
+    .then(({ error }) => {
+      if (error) {
+        console.error('❌ Supabase connection failed:', error.message);
+      } else {
+        console.log('✅ Supabase connected successfully!');
+      }
+    })
+    .catch(err => console.error('❌ Supabase test error:', err.message));
+});
