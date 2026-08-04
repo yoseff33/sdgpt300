@@ -382,6 +382,9 @@ function initProductForm() {
   const form = document.getElementById('createProductForm');
   if (!form) return;
 
+  // تحديد عنوان الخادم الخلفي (غيّر المنفذ حسب إعدادك)
+  const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000'; // <--- غيّر الرقم إلى منفذ الخادم الفعلي
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -397,13 +400,21 @@ function initProductForm() {
       }
 
       const formData = new FormData(form);
-      const res = await fetch('/api/products', {
-        method: 'POST',
+      // استخدام المسار الكامل مع API_BASE_URL
+const API_BASE_URL = window.API_BASE_URL || 'https://sdgpt300.onrender.com'; // <-- استخدم الرابط الجديد        method: 'POST',
         headers: { 'Authorization': `Bearer ${tok}` },
         body: formData
       });
 
-      const result = await res.json();
+      // محاولة قراءة الرد كـ JSON، وإذا فشل نعطي خطأ واضح
+      let result;
+      const text = await res.text();
+      try {
+        result = JSON.parse(text);
+      } catch {
+        throw new Error('الخادم أعاد استجابة غير صالحة (تأكد من تشغيل الخادم الخلفي على المنفذ الصحيح)');
+      }
+
       if (!res.ok) throw new Error(result.error || 'حدث خطأ أثناء النشر');
 
       toast('✅ تم نشر الإعلان بنجاح!', 'success');
