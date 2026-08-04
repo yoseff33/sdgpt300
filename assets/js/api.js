@@ -1,13 +1,14 @@
 const TOKEN_KEY = 'damanak_token';
 
 /**
- * عنوان الباك إند:
- * 1) الأفضل تعريفه قبل تحميل app.js داخل الصفحة:
- *    <script>window.DAMANAK_CONFIG = { apiBaseUrl: 'https://api.example.com/api' };</script>
- * 2) أثناء التطوير المحلي، إذا لم يُعرّف، سيتم استخدام /api من نفس النطاق.
+ * رابط الباك إند الحقيقي الخارجي (مثال: https://your-backend.onrender.com/api)
+ * إذا حطيت الرابط في window.DAMANAK_CONFIG بياخذه مباشرة، 
+ * وإذا ما حطيته راح يستبدل الرابط الافتراضي بالرابط اللي تحطه تحت بدال الرابط الاحتياطي.
  */
+const DEFAULT_BACKEND_URL = 'https://damanak-backend.example.com/api'; // استبدل هذا برابط سيرفرك الحقيقي
+
 const configuredBaseUrl = window.DAMANAK_CONFIG?.apiBaseUrl?.trim();
-const API_BASE_URL = (configuredBaseUrl || '/api').replace(/\/+$/, '');
+const API_BASE_URL = (configuredBaseUrl || DEFAULT_BACKEND_URL).replace(/\/+$/, '');
 
 export const token = () => localStorage.getItem(TOKEN_KEY);
 
@@ -80,7 +81,7 @@ export async function api(path, options = {}) {
       ...options,
       headers,
       signal: options.signal || controller.signal,
-      credentials: options.credentials || 'same-origin'
+      credentials: options.credentials || 'omit'
     });
 
     const data = await parseResponse(response);
