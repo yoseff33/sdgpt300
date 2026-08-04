@@ -4,254 +4,172 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ضمانك، سوق سعودي آمن يحفظ مبلغ الصفقة لين يستلم المشتري ويتأكد.">
-  <meta name="theme-color" content="#006c35">
-  <title>ضمانك | بيع واشتر وأنت مرتاح</title>
+  <meta name="theme-color" content="#087443">
+  <title>ضمانك | بيع واشتر بثقة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">تجاوز إلى المحتوى</a>
-
   <div data-header></div>
 
   <main id="main-content">
-    <section class="hero home-hero" aria-labelledby="hero-title">
-      <div class="hero__content">
-        <span class="eyebrow">منصة سعودية لصفقات أوضح وأأمن</span>
-        <h1 id="hero-title">بيع واشتر وأنت مرتاح، <span>حقك محفوظ مع ضمانك.</span></h1>
-        <p>
-          نحفظ مبلغ الصفقة لين يستلم المشتري ويتأكد، وبعدها يتحول المبلغ للبائع حسب الشروط المتفق عليها.
-        </p>
+    <section class="hero-section">
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">سوق سعودي بصفقات أوضح وأأمن</span>
+          <h1>بيع واشتر بثقة، والمبلغ ما يتحول إلا بعد الاستلام.</h1>
+          <p>اتفق على المنتج والسعر، وخلك مطمئن لين يتم الاستلام والفحص وتأكيد الصفقة.</p>
 
-        <div class="hero__actions">
-          <a class="button button--primary" href="#market">تصفح المعروض</a>
-          <a class="button button--secondary" href="how-it-works.html">كيف تضمن حقك؟</a>
+          <form class="hero-search" action="#market" aria-label="البحث في السوق">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+            <input id="heroSearch" type="search" placeholder="وش تدور عليه؟ سيارة، جوال، أثاث...">
+            <button class="button button--primary" type="submit">بحث</button>
+          </form>
+
+          <div class="popular-searches" aria-label="عمليات بحث شائعة">
+            <span>الأكثر بحثاً:</span>
+            <a href="#market" data-search="آيفون">آيفون</a>
+            <a href="#market" data-search="سيارات">سيارات</a>
+            <a href="#market" data-search="أجهزة">أجهزة</a>
+            <a href="#market" data-search="أثاث">أثاث</a>
+          </div>
+
+          <div class="hero-actions">
+            <a class="button button--primary" href="#market">تصفح السوق</a>
+            <a class="button button--secondary" href="product.html">أضف إعلانك</a>
+          </div>
+
+          <ul class="trust-badges">
+            <li><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.2c0 4.7 3.2 8.5 7.5 9.8 4.3-1.3 7.5-5.1 7.5-9.8V6L12 3Z"/><path d="m8.7 12 2.1 2.1 4.6-4.6"/></svg>توثيق الهوية</li>
+            <li><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18"/></svg>المبلغ محفوظ</li>
+            <li><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>مهلة فحص</li>
+            <li><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Z"/></svg>سجل كامل</li>
+          </ul>
         </div>
 
-        <ul class="trust-pills" aria-label="مزايا الأمان">
-          <li>توثيق الهوية</li>
-          <li>المبلغ محفوظ</li>
-          <li>فحصك بمهلة</li>
-          <li>كل خطوة مسجلة</li>
-        </ul>
-      </div>
-
-      <div class="hero__visual" aria-hidden="true">
-        <div class="security-card">
-          <div class="security-card__icon">✓</div>
-          <div>
-            <small>حالة الصفقة</small>
-            <strong>المبلغ محفوظ</strong>
-          </div>
-          <span class="status-dot"></span>
-        </div>
-
-        <div class="deal-preview">
-          <div class="deal-preview__top">
-            <span>صفقة موثقة</span>
-            <b>ضمانك</b>
-          </div>
-          <h2>جوال آيفون 15 برو</h2>
-          <p>مهلة الفحص: 24 ساعة</p>
-          <strong>4,250 ر.س</strong>
-          <div class="deal-preview__progress">
-            <span class="is-done"></span>
-            <span class="is-done"></span>
-            <span class="is-active"></span>
-            <span></span>
-          </div>
+        <div class="hero-visual reveal" aria-label="مثال بصري لصفقة محفوظة">
+          <div class="visual-orbit visual-orbit--one"></div>
+          <div class="visual-orbit visual-orbit--two"></div>
+          <article class="featured-deal">
+            <div class="featured-deal__image">
+              <svg viewBox="0 0 520 390" role="img" aria-label="رسم توضيحي لهاتف معروض للبيع">
+                <defs>
+                  <linearGradient id="phoneBg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f5ee"/><stop offset="1" stop-color="#f7efe1"/></linearGradient>
+                  <linearGradient id="phoneScreen" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#087443"/><stop offset="1" stop-color="#15392c"/></linearGradient>
+                </defs>
+                <rect width="520" height="390" rx="30" fill="url(#phoneBg)"/>
+                <circle cx="86" cy="72" r="38" fill="#fff" opacity=".75"/>
+                <circle cx="430" cy="310" r="72" fill="#c8aa72" opacity=".18"/>
+                <g transform="translate(165 35)">
+                  <rect x="0" y="0" width="190" height="320" rx="34" fill="#111b16"/>
+                  <rect x="8" y="8" width="174" height="304" rx="28" fill="url(#phoneScreen)"/>
+                  <rect x="66" y="15" width="58" height="12" rx="6" fill="#0a120e"/>
+                  <circle cx="50" cy="55" r="18" fill="#0b1711" stroke="#dce9e1" stroke-width="4"/>
+                  <circle cx="92" cy="55" r="18" fill="#0b1711" stroke="#dce9e1" stroke-width="4"/>
+                  <circle cx="50" cy="96" r="18" fill="#0b1711" stroke="#dce9e1" stroke-width="4"/>
+                  <path d="M37 228c35-54 85-75 135-54v138H8v-43c11-2 21-11 29-41Z" fill="#d6b87a" opacity=".9"/>
+                  <path d="M15 242c33-35 77-55 136-34v104H8v-58c2-4 5-8 7-12Z" fill="#f6f1e8" opacity=".9"/>
+                </g>
+              </svg>
+              <span class="deal-badge">إعلان موثق</span>
+              <button class="favorite-button" type="button" aria-label="إضافة للمفضلة"><svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg></button>
+            </div>
+            <div class="featured-deal__body">
+              <div class="deal-meta"><span>إلكترونيات</span><span>حائل · قبل 20 دقيقة</span></div>
+              <h2>آيفون 15 برو 256GB</h2>
+              <div class="deal-price">4,250 <small>ر.س</small></div>
+              <div class="verified-seller"><span class="verified-seller__icon"><svg viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><div><b>البائع موثق</b><small>تم التحقق من بيانات الحساب</small></div></div>
+              <div class="deal-timeline" aria-label="مراحل الصفقة">
+                <span class="is-complete"></span><span class="is-complete"></span><span class="is-current"></span><span></span>
+              </div>
+              <div class="deal-status"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><div><small>حالة الصفقة</small><strong>المبلغ محفوظ</strong></div><span></span></div>
+            </div>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section section--muted" aria-labelledby="how-title">
+    <section class="categories-section section">
       <div class="container">
-        <div class="section-heading">
-          <span class="eyebrow">الطريقة واضحة من البداية</span>
-          <h2 id="how-title">كيف تضمن حقك؟</h2>
-          <p>أربع خطوات بسيطة، وكل طرف يعرف وش له ووش عليه.</p>
+        <div class="section-heading section-heading--split">
+          <div><span class="eyebrow">تصفح بسرعة</span><h2>الأقسام الرئيسية</h2></div>
+          <a href="#market">عرض كل الأقسام</a>
         </div>
-
-        <div class="steps-grid">
-          <article class="step-card">
-            <span class="step-card__number">1</span>
-            <div class="step-card__icon" aria-hidden="true">🤝</div>
-            <h3>اتفقوا على الصفقة</h3>
-            <p>حددوا المنتج والسعر ومدة الفحص، وبعدها افتحوا الصفقة في ضمانك.</p>
-          </article>
-
-          <article class="step-card">
-            <span class="step-card__number">2</span>
-            <div class="step-card__icon" aria-hidden="true">💳</div>
-            <h3>المشتري يدفع</h3>
-            <p>المبلغ ينحفظ بأمان، ولا يتحول للبائع مباشرة.</p>
-          </article>
-
-          <article class="step-card">
-            <span class="step-card__number">3</span>
-            <div class="step-card__icon" aria-hidden="true">📦</div>
-            <h3>الاستلام والفحص</h3>
-            <p>المشتري يستلم المنتج ويجربه خلال المهلة المتفق عليها.</p>
-          </article>
-
-          <article class="step-card">
-            <span class="step-card__number">4</span>
-            <div class="step-card__icon" aria-hidden="true">✅</div>
-            <h3>تحويل المبلغ</h3>
-            <p>إذا كل شيء تمام، يتحول المبلغ للبائع وتنتهي الصفقة.</p>
-          </article>
+        <div class="categories-grid">
+          <a class="category-item" href="#market" data-category="سيارات"><svg viewBox="0 0 24 24"><path d="m5 16 1.5-6h11L19 16"/><path d="M3 16h18v3H3z"/><circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg><span>السيارات</span></a>
+          <a class="category-item" href="#market" data-category="إلكترونيات"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 18h4"/></svg><span>الجوالات</span></a>
+          <a class="category-item" href="#market" data-category="إلكترونيات"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>الإلكترونيات</span></a>
+          <a class="category-item" href="#market" data-category="أثاث"><svg viewBox="0 0 24 24"><path d="M5 11V7a3 3 0 0 1 6 0v4M13 11V7a3 3 0 0 1 6 0v4"/><path d="M3 12h18v7H3zM6 19v2M18 19v2"/></svg><span>الأثاث</span></a>
+          <a class="category-item" href="#market"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></svg><span>العقار</span></a>
+          <a class="category-item" href="#market" data-category="خدمات"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM8 7V5h8v2"/><path d="M4 12h16"/></svg><span>الخدمات</span></a>
         </div>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="calculator-title">
-      <div class="container calculator-layout">
-        <div class="calculator-copy">
-          <span class="eyebrow">احسبها قبل تبدأ</span>
-          <h2 id="calculator-title">الحسبة واضحة، بدون رسوم مخفية</h2>
-          <p>
-            أدخل قيمة الصفقة واختر الطرف اللي يتحمل الرسوم، وبتشوف الإجمالي وصافي البائع مباشرة.
-          </p>
-          <div class="calculator-note">
-            <strong>ملاحظة:</strong>
-            <span>النتيجة تقديرية إلى أن يتم اعتماد الرسوم وربط بوابة الدفع فعلياً.</span>
-          </div>
-        </div>
-
-        <form id="escrowCalculator" class="calculator-card" novalidate>
-          <label for="dealAmount">قيمة الصفقة</label>
-          <div class="money-input">
-            <input id="dealAmount" name="amount" type="text" inputmode="decimal" placeholder="مثال: 5000" autocomplete="off">
-            <span>ر.س</span>
-          </div>
-
-          <label for="feePayer">مين يتحمل الرسوم؟</label>
-          <select id="feePayer" name="feePayer">
-            <option value="buyer">المشتري</option>
-            <option value="seller">البائع</option>
-            <option value="split">الطرفان مناصفة</option>
-          </select>
-
-          <div class="calculator-results" aria-live="polite">
-            <div><span>قيمة الصفقة</span><strong id="calcAmount">0 ر.س</strong></div>
-            <div><span>رسوم ضمانك</span><strong id="calcFee">0 ر.س</strong></div>
-            <div><span>الضريبة</span><strong id="calcVat">0 ر.س</strong></div>
-            <div><span>إجمالي المشتري</span><strong id="calcBuyerTotal">0 ر.س</strong></div>
-            <div class="calculator-results__total"><span>صافي البائع</span><strong id="calcSellerNet">0 ر.س</strong></div>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <section id="market" class="section section--muted" aria-labelledby="market-title">
+    <section id="market" class="section market-section">
       <div class="container">
-        <div class="market-heading">
-          <div>
-            <span class="eyebrow">السوق</span>
-            <h2 id="market-title">وش تدور عليه؟</h2>
-            <p>تصفح المعروض، صفّ النتائج، وابدأ صفقة مضمونة بخطوات واضحة.</p>
-          </div>
-          <a class="button button--secondary button--small" href="product.html">إضافة إعلان</a>
+        <div class="section-heading section-heading--split">
+          <div><span class="eyebrow">أحدث الإعلانات</span><h2>وش يناسبك اليوم؟</h2><p>إعلانات مرتبة وواضحة، وتفاصيل الحماية ظاهرة قبل تبدأ.</p></div>
+          <a class="button button--secondary button--small" href="product.html">أضف إعلانك</a>
         </div>
 
         <form id="filters" class="filters" aria-label="تصفية المنتجات">
-          <div class="filter-field filter-field--search">
-            <label class="sr-only" for="searchQuery">البحث</label>
-            <input id="searchQuery" name="q" type="search" placeholder="وش تدور عليه؟">
-          </div>
-
-          <div class="filter-field">
-            <label class="sr-only" for="categoryFilter">القسم</label>
-            <select id="categoryFilter" name="category">
-              <option value="">كل الأقسام</option>
-              <option value="إلكترونيات">إلكترونيات</option>
-              <option value="سيارات">سيارات</option>
-              <option value="أثاث">أثاث</option>
-              <option value="خدمات">خدمات</option>
-            </select>
-          </div>
-
-          <div class="filter-field">
-            <label class="sr-only" for="maxPrice">أعلى سعر</label>
-            <input id="maxPrice" name="max" type="number" min="0" step="1" placeholder="أعلى سعر">
-          </div>
-
+          <div class="filter-field filter-field--search"><svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg><input id="searchQuery" name="q" type="search" placeholder="ابحث في الإعلانات"></div>
+          <select id="categoryFilter" name="category"><option value="">كل الأقسام</option><option value="إلكترونيات">إلكترونيات</option><option value="سيارات">سيارات</option><option value="أثاث">أثاث</option><option value="خدمات">خدمات</option></select>
+          <input id="maxPrice" name="max" type="number" min="0" step="1" placeholder="أعلى سعر">
           <button class="button button--primary" type="submit">تصفية النتائج</button>
           <button class="button button--ghost" id="clearFilters" type="button">مسح الكل</button>
         </form>
 
-        <div class="results-bar">
-          <p id="resultsCount">جارٍ تحميل المنتجات…</p>
-        </div>
-
-        <div id="products" class="products-grid" aria-live="polite">
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-        </div>
+        <div class="quick-filters"><button type="button" data-quick-filter="all" class="is-active">الكل</button><button type="button" data-quick-filter="verified">موثق</button><button type="button" data-quick-filter="latest">الأحدث</button><button type="button" data-quick-filter="lowest">الأقل سعراً</button></div>
+        <div class="results-bar"><p id="resultsCount">جارٍ تحميل المنتجات…</p></div>
+        <div id="products" class="products-grid" aria-live="polite"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="trust-title">
+    <section class="section process-section" aria-labelledby="how-title">
       <div class="container">
-        <div class="section-heading">
-          <span class="eyebrow">ثقة من أول خطوة</span>
-          <h2 id="trust-title">ليش تثق بضمانك؟</h2>
-          <p>مصممة عشان تكون الصفقة أوضح، والمخاطر أقل، والحقوق موثقة.</p>
+        <div class="section-heading"><span class="eyebrow">من الاتفاق إلى إغلاق الصفقة</span><h2 id="how-title">كيف تمشي الصفقة؟</h2><p>مسار واحد واضح، وكل خطوة لها حالة وتوقيت.</p></div>
+        <div class="process-track">
+          <article><span class="process-icon"><svg viewBox="0 0 24 24"><path d="M8 12 4 8l4-4M16 12l4-4-4-4"/><path d="M5 8h14M7 16h10"/></svg></span><b>اتفاق</b><p>حددوا المنتج والسعر والمهلة.</p></article>
+          <article><span class="process-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9h18M7 15h3"/></svg></span><b>دفع آمن</b><p>ينحفظ المبلغ ولا يتحول مباشرة.</p></article>
+          <article><span class="process-icon"><svg viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="m3 7 9 4 9-4v10l-9 4-9-4V7Z"/></svg></span><b>استلام وفحص</b><p>استلم المنتج وافحصه خلال المهلة.</p></article>
+          <article><span class="process-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><b>تحويل للبائع</b><p>بعد التأكيد تنتهي الصفقة بوضوح.</p></article>
         </div>
+      </div>
+    </section>
 
+    <section class="section trust-section">
+      <div class="container trust-layout">
+        <div><span class="eyebrow">حماية بدون تعقيد</span><h2>كل شيء واضح قبل الدفع</h2><p>منصة مصممة لتقلل المخاطر وتخلي كل إجراء موثق ومفهوم.</p></div>
         <div class="trust-grid">
-          <article class="trust-card">
-            <span aria-hidden="true">🪪</span>
-            <h3>التحقق من الهوية</h3>
-            <p>قابلة للربط مع خدمات التحقق الحكومية حسب الخدمات المفعلة.</p>
-          </article>
-          <article class="trust-card">
-            <span aria-hidden="true">🔒</span>
-            <h3>حفظ المبلغ</h3>
-            <p>المبلغ ما يتحول للبائع إلا بعد اكتمال شروط الصفقة.</p>
-          </article>
-          <article class="trust-card">
-            <span aria-hidden="true">🧾</span>
-            <h3>سجل كامل للصفقة</h3>
-            <p>كل خطوة وموافقة وتحديث محفوظ داخل سجل الصفقة.</p>
-          </article>
-          <article class="trust-card">
-            <span aria-hidden="true">⚖️</span>
-            <h3>حماية الطرفين</h3>
-            <p>الشروط واضحة للبائع والمشتري قبل الدفع.</p>
-          </article>
-        </div>
-
-        <div class="payment-strip" aria-label="وسائل الدفع القابلة للربط">
-          <span>مدى</span>
-          <span>سداد</span>
-          <span>Apple Pay</span>
-          <span>تابي</span>
-          <span>تمارا</span>
-          <small>الخدمات تظهر عند تفعيل الربط الفعلي.</small>
+          <article><span><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.2c0 4.7 3.2 8.5 7.5 9.8 4.3-1.3 7.5-5.1 7.5-9.8V6L12 3Z"/><path d="m8.7 12 2.1 2.1 4.6-4.6"/></svg></span><div><h3>هوية البائع</h3><p>يظهر مستوى التحقق بوضوح داخل الإعلان.</p></div></article>
+          <article><span><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><h3>المبلغ ما يتحول مباشرة</h3><p>ينتظر اكتمال شروط الصفقة وتأكيد الاستلام.</p></div></article>
+          <article><span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h3>مهلة فحص واضحة</h3><p>الوقت المتبقي يظهر للطرفين أول بأول.</p></div></article>
+          <article><span><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Z"/></svg></span><div><h3>سجل زمني</h3><p>كل موافقة وتحديث محفوظ داخل الصفقة.</p></div></article>
         </div>
       </div>
     </section>
 
-    <section class="cta-section">
-      <div class="container cta-card">
-        <div>
-          <span class="eyebrow">خل ضمانك بينكم</span>
-          <h2>لا تحول خارج المنصة إذا تبي حماية الصفقة.</h2>
-          <p>اتفقوا على الشروط، افتحوا الصفقة، وكل طرف يمشي بخطوات واضحة.</p>
-        </div>
-        <a class="button button--light" href="#market">ابدأ من السوق</a>
+    <section class="section calculator-section">
+      <div class="container calculator-layout">
+        <div class="calculator-copy"><span class="eyebrow">احسبها قبل تبدأ</span><h2>الحسبة واضحة، بدون رسوم مخفية</h2><p>شوف إجمالي المشتري وصافي البائع قبل إنشاء الصفقة.</p><div class="calculator-note"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>النتيجة تقديرية إلى أن يتم اعتماد الرسوم وربط بوابة الدفع فعلياً.</span></div></div>
+        <form id="escrowCalculator" class="calculator-card" novalidate>
+          <label for="dealAmount">قيمة الصفقة</label><div class="money-input"><input id="dealAmount" name="amount" type="text" inputmode="decimal" value="5000" autocomplete="off"><span>ر.س</span></div>
+          <label for="feePayer">مين يتحمل الرسوم؟</label><select id="feePayer" name="feePayer"><option value="buyer">المشتري</option><option value="seller">البائع</option><option value="split">الطرفان مناصفة</option></select>
+          <div class="calculator-results" aria-live="polite"><div><span>قيمة الصفقة</span><strong id="calcAmount">0 ر.س</strong></div><div><span>رسوم ضمانك <small>3%</small></span><strong id="calcFee">0 ر.س</strong></div><div><span>الضريبة</span><strong id="calcVat">0 ر.س</strong></div><div class="calculator-highlight"><span>إجمالي المشتري</span><strong id="calcBuyerTotal">0 ر.س</strong></div><div class="calculator-results__total"><span>صافي البائع</span><strong id="calcSellerNet">0 ر.س</strong></div></div>
+          <a class="button button--primary button--block" href="product.html">ابدأ صفقة بهذه القيمة</a>
+        </form>
       </div>
     </section>
+
+    <section class="cta-section"><div class="container cta-card"><div><span class="eyebrow">خل ضمانك بينكم</span><h2>لا تحول خارج المنصة إذا تبي حماية الصفقة.</h2><p>اتفقوا على الشروط، افتحوا الصفقة، وكل طرف يمشي بخطوات واضحة.</p></div><a class="button button--light" href="#market">ابدأ من السوق</a></div></section>
   </main>
 
   <div data-footer></div>
-
-  <noscript>
-    <div class="noscript-message">لازم تفعّل JavaScript عشان تعمل الحاسبة والمنتجات بشكل صحيح.</div>
-  </noscript>
-
   <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
