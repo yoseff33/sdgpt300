@@ -182,3 +182,57 @@ export async function dispute(req, res) {
   await notify([transaction.buyer_id, transaction.seller_id], 'تم فتح مشكلة على الصفقة');
   res.status(201).json(data);
 }
+
+// ==========================================
+// دالة إنشاء رابط دفع خاص (الميزة الجديدة)
+// ==========================================
+export async function createPaymentLink(req, res) {
+  const { amount, description, buyer_email } = req.body;
+
+  // التحقق من صحة المبلغ
+  const finalAmount = Number(amount);
+  if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
+    return res.status(422).json({ error: 'المبلغ غير صالح' });
+  }
+
+  // تنظيف الوصف
+  const finalDescription = String(description || 'رابط دفع مباشر').trim().slice(0, 255);
+
+  // حساب العمولة
+  const rate = Number(process.env.COMMISSION_RATE || 0.03);
+  const commission = Number((finalAmount * rate).toFixed(2));
+
+  // إنشاء المعاملة مباشرة بدون منتج (product_id = null)
+  const transaction = {
+    seller_id: req.user.id,
+    amount: finalAmount,
+    commission,
+    description: finalDescription,
+    status: 'pending_payment',
+    buyer_id: null, // يترك فارغاً حتى يدفع المشتري
+    product_id: null, // لا يرتبط بمنتج محدد
+    inspection_hours: 24, // قيمة افتراضية
+    payment_method: null
+  };
+
+  const { data, error } = await admin
+    .from('transactions')
+    .insert(transaction)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('خطأ في إنشاء رابط الدفع:', error);
+    return res.status(500).json({ error: 'فشل في إنشاء الرابط' });
+  }
+
+  // إنشاء الرابط الفريد
+  const appUrl = (process.env.APP_URL || '').replace(/\/$/, '');
+  const paymentLink = `${appUrl}/pay/${data.id}`;
+
+  res.status(201).json({
+    ...data,
+    payment_link: paymentLink,
+    message: 'تم إنشاء رابط الدفع بنجاح'
+  });
+}
