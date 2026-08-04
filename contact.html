@@ -1,1 +1,38 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تواصل | ضمانك</title><link rel="stylesheet" href="/assets/css/style.css"></head><body><div data-header></div><main class="container"><form class="form card" id="contact"><h1>كيف نساعدك؟</h1><label>الموضوع<input name="subject" required></label><label>الرسالة<textarea name="message" required rows="6"></textarea></label><button>إرسال التذكرة</button><p id="msg"></p></form></main><div data-footer></div><script type="module" src="/assets/js/app.js"></script><script type="module">import{api}from'/assets/js/api.js';document.querySelector('#contact').onsubmit=async e=>{e.preventDefault();try{await api('/account/tickets',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});document.querySelector('#msg').textContent='تم إرسال التذكرة'}catch(x){document.querySelector('#msg').textContent=x.message}}</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تواصل | ضمانك</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+  <main class="container">
+    <form class="form card" id="contact">
+      <h1>كيف نساعدك؟</h1>
+      <label>الموضوع<input name="subject" required></label>
+      <label>الرسالة<textarea name="message" required rows="6"></textarea></label>
+      <button>إرسال التذكرة</button>
+      <p id="msg"></p>
+    </form>
+  </main>
+  <div data-footer></div>
+  <script type="module" src="/assets/js/app.js"></script>
+  <script type="module">
+    import { api } from '/assets/js/api.js';
+    document.querySelector('#contact').onsubmit = async e => {
+      e.preventDefault();
+      try {
+        await api('/account/tickets', {
+          method: 'POST',
+          body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+        });
+        document.querySelector('#msg').textContent = 'تم إرسال التذكرة';
+      } catch(x) {
+        document.querySelector('#msg').textContent = x.message;
+      }
+    };
+  </script>
+</body>
+</html>
