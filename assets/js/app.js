@@ -1,24 +1,42 @@
-// ===== استيراد api =====
-import { api, token, money } from './api.js';
+// ===== استيراد api والمكتبات =====
+import { api, money, token } from './api.js';
 
-// ===== الهيدر والفوتر =====
-async function loadHeaderFooter() {
-  // يمكنك وضع HTML للهيدر والفوتر هنا أو جلبها من ملفات خارجية
-  // لكن سنقوم ببنائهما ديناميكياً لتبسيط الأمور
+// ===== دوال مساعدة =====
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// ===== حالة المعاملات =====
+const statusMap = {
+  pending_payment: 'بانتظار الدفع',
+  funds_held: 'المبلغ محفوظ',
+  shipped: 'تم التسليم',
+  completed: 'مكتملة',
+  disputed: 'نزاع مفتوح',
+  cancelled: 'ملغاة'
+};
+
+// ===== إنشاء الهيدر والفوتر (تعويض components.js) =====
+function shell() {
+  // بناء الهيدر
   const headerHTML = `
     <header>
       <div class="brand">ضمانك</div>
       <nav>
-        <a href="/index.html" class="active">الرئيسية</a>
+        <a href="/index.html">الرئيسية</a>
         <a href="/dashboard.html">لوحة التحكم</a>
         <a href="/product.html">المنتجات</a>
         <a href="/how-it-works.html">كيف تعمل؟</a>
         <a href="/contact.html">تواصل</a>
+        <span class="bell" id="bell">
+          🔔
+          <span class="badge" id="badge">0</span>
+        </span>
         <button id="themeToggle" aria-label="تغيير الثيم">🌙</button>
       </nav>
     </header>
   `;
 
+  // بناء الفوتر
   const footerHTML = `
     <footer>
       <div><h4>ضمانك</h4><p>منصة الضمان الرقمي الأولى</p></div>
@@ -28,17 +46,36 @@ async function loadHeaderFooter() {
     </footer>
   `;
 
-  document.querySelector('[data-header]')?.replaceWith?.(document.createRange().createContextualFragment(headerHTML));
-  document.querySelector('[data-footer]')?.replaceWith?.(document.createRange().createContextualFragment(footerHTML));
+  // إدراج الهيدر والفوتر في العناصر المخصصة
+  const headerContainer = document.querySelector('[data-header]');
+  const footerContainer = document.querySelector('[data-footer]');
+  if (headerContainer) {
+    headerContainer.innerHTML = headerHTML;
+    // تفعيل زر الثيم
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+      toggle.addEventListener('click', toggleTheme);
+    }
+  }
+  if (footerContainer) {
+    footerContainer.innerHTML = footerHTML;
+  }
 
-  // إضافة مستمع لزر الثيم بعد تحميل الهيدر
-  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+  // تحميل الثيم المحفوظ
+  loadTheme();
 }
 
-// ===== الثيم =====
+// ===== إدارة الثيم =====
 function toggleTheme() {
   document.documentElement.classList.toggle('dark');
   localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  updateThemeIcon();
+}
+
+function loadTheme() {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark');
+  }
   updateThemeIcon();
 }
 
@@ -49,67 +86,277 @@ function updateThemeIcon() {
   }
 }
 
-function loadTheme() {
-  if (localStorage.getItem('theme') === 'dark') {
-    document.documentElement.classList.add('dark');
+// ===== الصفحة الرئيسية (عرض المنتجات) =====
+async function home() {
+  const grid = $('#products');
+  if (!grid) return;
+
+  async function loadProducts() {
+    try {
+      const params = new URLSearchParams(new FormData($('#filters')));
+      const rows = await api(`/products?${params}`);
+      if (rows.length) {
+        grid.innerHTML = rows.map(p => `
+          <article class="card">
+            <img src="${p.image_url || '/assets/img/placeholder.svg'}" alt="${p.title}">
+            <span class="tag">${p.category || ''}</span>
+            <h3>${p.title}</h3>
+            <p>${p.description || ''}</p>
+            <b>${money(p.price)}</b>
+            <a class="button" href="/product.html?id=${p.id}">عرض المنتج</a>
+          </article>
+        `).join('');
+      } else {
+        grid.innerHTML = '<p>لا توجد نتائج.</p>';
+      }
+    } catch (e) {
+      grid.innerHTML = `<p class="error">${e.message}</p>`;
+    }
   }
-  updateThemeIcon();
+
+  const filterForm = $('#filters');
+  if (filterForm) {
+    filterForm.addEventListener('submit', e => {
+      e.preventDefault();
+      loadProducts();
+    });
+  }
+  loadProducts();
 }
 
-// ===== تهيئة عامة =====
-document.addEventListener('DOMContentLoaded', async () => {
-  loadTheme();
-  await loadHeaderFooter();
-  // تنفيذ أي وظائف خاصة بالصفحة حسب وجود عناصر معينة
-  initPage();
-});
-
-// ===== وظائف خاصة بالصفحات =====
-function initPage() {
-  // مثال: تحميل المعاملات في الصفحة الرئيسية
-  if (document.getElementById('products')) {
-    loadProducts();
-  }
-  if (document.getElementById('transaction')) {
-    loadTransaction();
-  }
-  if (document.getElementById('dashboard')) {
-    loadDashboard();
-  }
-  // إلخ...
+// ===== نموذج الدخول / التسجيل =====
+function initAuth() {
+  const form = $('#auth');
+  if (!form) return;
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = Object.fromEntries(new FormData(e.target));
+    try {
+      const data = await api(`/auth/${fd.mode}`, { method: 'POST', body: JSON.stringify(fd) });
+      if (fd.mode === 'signup') {
+        $('#msg').textContent = 'تم إنشاء الحساب. تحقق من بريدك ثم سجل الدخول.';
+      } else {
+        localStorage.setItem('damanak_token', data.session.access_token);
+        location.href = '/dashboard.html';
+      }
+    } catch (x) {
+      $('#msg').textContent = x.message;
+    }
+  });
 }
 
-// ===== دوال تحميل البيانات =====
-async function loadProducts() {
+// ===== صفحة المنتج =====
+async function productPage() {
+  const container = $('#product');
+  if (!container) return;
   try {
-    const data = await api('/products'); // افتراضي
-    const container = document.getElementById('products');
-    if (!container) return;
-    if (data.length === 0) {
-      container.innerHTML = '<p class="text-muted text-center">لا توجد منتجات</p>';
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      container.textContent = 'لم يتم تحديد المنتج';
       return;
     }
-    container.innerHTML = data.map(p => `
-      <div class="card">
-        <img src="${p.image || 'https://placehold.co/300x180?text=منتج'}" alt="${p.title}">
-        <h3>${p.title}</h3>
-        <div class="price">${money(p.price)}</div>
-        <div class="seller">${p.seller_name || 'بائع'}</div>
-        <a href="/product.html?id=${p.id}" class="button small">تفاصيل</a>
-      </div>
-    `).join('');
-  } catch (error) {
-    console.error('فشل تحميل المنتجات:', error);
+    const p = await api(`/products/${id}`);
+    container.innerHTML = `
+      <img src="${p.image_url || '/assets/img/placeholder.svg'}" alt="${p.title}">
+      <section>
+        <span class="tag">${p.category || ''}</span>
+        <h1>${p.title}</h1>
+        <p>${p.description || ''}</p>
+        <h2>${money(p.price)}</h2>
+        <p>فترة الفحص: ${p.inspection_hours || 24} ساعة · البائع ${p.seller?.nafath_verified ? 'موثق ✓' : 'غير موثق'}</p>
+        <button id="buy">شراء بضمان</button>
+      </section>
+    `;
+    const buyBtn = $('#buy');
+    if (buyBtn) {
+      buyBtn.onclick = async () => {
+        if (!token()) {
+          location.href = '/login.html';
+          return;
+        }
+        try {
+          const tx = await api('/transactions', {
+            method: 'POST',
+            body: JSON.stringify({
+              product_id: p.id,
+              seller_id: p.seller_id,
+              amount: p.price,
+              inspection_hours: p.inspection_hours || 24
+            })
+          });
+          location.href = `/transaction.html?id=${tx.id}`;
+        } catch (e) {
+          alert(e.message);
+        }
+      };
+    }
+  } catch (e) {
+    container.textContent = e.message;
   }
 }
 
-async function loadTransaction() {
-  // تنفيذ خاص بالصفحة
+// ===== صفحة المعاملة =====
+async function transactionPage() {
+  const container = $('#transaction');
+  if (!container) return;
+  try {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      container.textContent = 'لم يتم تحديد المعاملة';
+      return;
+    }
+    const t = await api(`/transactions/${id}`);
+    container.innerHTML = `
+      <div class="card">
+        <span class="status ${t.status}">${statusMap[t.status] || t.status}</span>
+        <h1>${t.product?.title || 'معاملة مباشرة'}</h1>
+        <h2>${money(t.amount)}</h2>
+        <p>${t.description || ''}</p>
+        <p>العمولة: ${money(t.commission)}</p>
+        ${t.inspection_deadline ? `<p data-deadline="${t.inspection_deadline}"></p>` : ''}
+        <div class="actions">
+          ${t.status === 'pending_payment' ? `
+            <button data-pay="moyasar">مدى / فيزا</button>
+            <button data-pay="tabby">تابي</button>
+            <button data-pay="tamara">تمارا</button>
+          ` : ''}
+          ${t.status === 'funds_held' ? '<button id="ship">تأكيد التسليم</button>' : ''}
+          ${t.status === 'shipped' ? '<button id="receive">تأكيد الاستلام</button>' : ''}
+          ${['funds_held', 'shipped'].includes(t.status) ? '<button class="danger" id="dispute">فتح نزاع</button>' : ''}
+          <button id="share">نسخ رابط المشاركة</button>
+        </div>
+      </div>
+    `;
+
+    // أزرار الدفع
+    $$('[data-pay]').forEach(btn => {
+      btn.onclick = async () => {
+        try {
+          const x = await api('/payments/create-session', {
+            method: 'POST',
+            body: JSON.stringify({ transactionId: id, method: btn.dataset.pay })
+          });
+          location.href = x.redirect_url;
+        } catch (e) {
+          alert(e.message);
+        }
+      };
+    });
+
+    // تأكيد التسليم
+    const shipBtn = $('#ship');
+    if (shipBtn) {
+      shipBtn.onclick = () => act('ship');
+    }
+
+    // تأكيد الاستلام
+    const receiveBtn = $('#receive');
+    if (receiveBtn) {
+      receiveBtn.onclick = () => act('confirm-receipt');
+    }
+
+    // فتح نزاع
+    const disputeBtn = $('#dispute');
+    if (disputeBtn) {
+      disputeBtn.onclick = async () => {
+        const reason = prompt('سبب النزاع');
+        if (reason) {
+          await api(`/transactions/${id}/raise-dispute`, {
+            method: 'PUT',
+            body: JSON.stringify({ reason, description: reason })
+          });
+          location.reload();
+        }
+      };
+    }
+
+    // مشاركة الرابط
+    const shareBtn = $('#share');
+    if (shareBtn) {
+      shareBtn.onclick = () => navigator.clipboard.writeText(location.href);
+    }
+
+    // مؤقت العد التنازلي
+    const deadlineEl = document.querySelector('[data-deadline]');
+    if (deadlineEl) {
+      setInterval(() => {
+        const remaining = Math.max(0, Math.floor((new Date(deadlineEl.dataset.deadline) - Date.now()) / 1000));
+        deadlineEl.textContent = `الوقت المتبقي: ${remaining} ثانية`;
+      }, 1000);
+    }
+
+    async function act(action) {
+      try {
+        await api(`/transactions/${id}/${action}`, { method: 'PUT' });
+        location.reload();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+  } catch (e) {
+    container.textContent = e.message;
+  }
 }
 
-async function loadDashboard() {
-  // تنفيذ خاص بالصفحة
+// ===== لوحة التحكم =====
+async function dashboardPage() {
+  const container = $('#dashboard');
+  if (!container) return;
+  try {
+    const rows = await api('/transactions');
+    container.innerHTML = `
+      <h1>لوحة التحكم</h1>
+      <div class="stats">
+        <div class="card">
+          <small>المعاملات</small>
+          <strong>${rows.length}</strong>
+        </div>
+        <div class="card">
+          <small>المبالغ</small>
+          <strong>${money(rows.reduce((s, x) => s + Number(x.amount), 0))}</strong>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>معاملاتي</h2>
+        ${rows.length ? rows.map(x => `
+          <a class="row" href="/transaction.html?id=${x.id}">
+            <span>${x.product?.title || 'معاملة مباشرة'}</span>
+            <b>${money(x.amount)}</b>
+            <em>${statusMap[x.status] || x.status}</em>
+          </a>
+        `).join('') : '<p>لا توجد معاملات</p>'}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<p class="error">${e.message}</p><a class="button" href="/login.html">تسجيل الدخول</a>`;
+  }
 }
 
-// ===== تصدير بعض الدوال للاستخدام في الصفحات =====
-export { api, token, money, loadProducts };
+// ===== الإشعارات =====
+async function loadNotifications() {
+  if (!token()) return;
+  try {
+    const notifs = await api('/notifications');
+    const badge = $('#badge');
+    if (badge) {
+      const unread = notifs.filter(n => !n.read).length;
+      badge.textContent = unread > 0 ? unread : '0';
+    }
+  } catch (e) {
+    console.error('فشل تحميل الإشعارات', e);
+  }
+}
+
+// ===== تهيئة الصفحة =====
+function init() {
+  shell();                 // بناء الهيكل العام
+  home();                  // تحميل المنتجات إذا وجدت
+  initAuth();              // نموذج الدخول
+  productPage();           // صفحة المنتج
+  transactionPage();       // صفحة المعاملة
+  dashboardPage();         // لوحة التحكم
+  loadNotifications();     // الإشعارات
+}
+
+// ===== تنفيذ عند تحميل DOM =====
+document.addEventListener('DOMContentLoaded', init);
