@@ -1,0 +1,1 @@
+import{Router}from'express';import{signup,login,logout,nafathStart,nafathConfirm}from'../controllers/authController.js';import{auth}from'../middleware/auth.js';const r=Router();r.post('/signup',signup);r.post('/login',login);r.post('/logout',auth,logout);r.post('/verify-nafath',auth,nafathStart);r.post('/confirm-nafath',auth,nafathConfirm);export default r;

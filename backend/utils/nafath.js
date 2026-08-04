@@ -1,0 +1,3 @@
+async function request(path,body){if(!process.env.NAFATH_BASE_URL||!process.env.NAFATH_API_KEY)throw Object.assign(new Error('تكامل نفاذ غير مهيأ'),{status:503});const r=await fetch(`${process.env.NAFATH_BASE_URL}${path}`,{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':process.env.NAFATH_API_KEY,'X-App-Id':process.env.NAFATH_APP_ID},body:JSON.stringify(body)});const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(data.message||'فشل طلب نفاذ'),{status:502});return data;}
+export const initiateNafathVerification=nationalId=>request('/api/v1/mfa/request',{nationalId,service:'DigitalServiceEnrollment'});
+export const confirmNafathVerification=(transactionId,random)=>request('/api/v1/mfa/status',{transactionId,random});

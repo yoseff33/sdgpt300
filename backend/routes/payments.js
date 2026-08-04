@@ -1,0 +1,1 @@
+import{Router}from'express';import{auth}from'../middleware/auth.js';import{createSession,webhook}from'../controllers/paymentController.js';const r=Router();r.post('/create-session',auth,createSession);r.post('/webhooks/:gateway',webhook);export default r;

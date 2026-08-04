@@ -1,0 +1,1 @@
+import{Router}from'express';import{auth}from'../middleware/auth.js';import{create,list,get,ship,confirmReceipt,dispute}from'../controllers/transactionController.js';const r=Router();r.use(auth);r.get('/',list);r.post('/',create);r.get('/:id',get);r.put('/:id/ship',ship);r.put('/:id/confirm-receipt',confirmReceipt);r.put('/:id/raise-dispute',dispute);export default r;
