@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>الدخول | ضمانك</title>
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <div data-header></div>
@@ -26,9 +26,9 @@
     </form>
   </main>
   <div data-footer></div>
-  <script type="module" src="/assets/js/app.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
   <script type="module">
-    import { api } from '/assets/js/api.js';
+    import { api } from './assets/js/api.js';
     const form = document.getElementById('auth');
     const msg = document.getElementById('msg');
     form.onsubmit = async e => {
@@ -39,7 +39,7 @@
         const res = await api(endpoint, { method: 'POST', body: JSON.stringify(data) });
         if (res.token) {
           localStorage.setItem('damanak_token', res.token);
-          window.location.href = '/dashboard.html';
+          window.location.href = 'dashboard.html';
         } else {
           msg.textContent = 'تم بنجاح، لكن الرمز غير موجود';
         }
