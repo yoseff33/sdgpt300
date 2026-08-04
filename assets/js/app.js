@@ -251,8 +251,10 @@ async function productPage() {
   const container = $('#product');
   if (!container) return;
   const id = new URLSearchParams(location.search).get('id');
-  if (!id) return container.innerHTML = '<div class="card"><h1>المنتج غير محدد</h1><a class="button" href="index.html#market">ارجع للسوق</a></div>';
+  // إذا لم يوجد id، نكون في صفحة إضافة الإعلان (النموذج موجود)، نخرج بدون تنفيذ
+  if (!id) return;
 
+  // باقي الكود لعرض تفاصيل المنتج
   try {
     const product = await api(`/products/${encodeURIComponent(id)}`);
     container.innerHTML = `
@@ -375,6 +377,51 @@ async function loadNotifications() {
   } catch { $('#badge').textContent = '0'; }
 }
 
+// ========== دالة معالجة نموذج إضافة الإعلان ==========
+function initProductForm() {
+  const form = document.getElementById('createProductForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري النشر...';
+
+    try {
+      const tok = token();
+      if (!tok) {
+        toast('يرجى تسجيل الدخول أولاً', 'error');
+        return;
+      }
+
+      const formData = new FormData(form);
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${tok}` },
+        body: formData
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'حدث خطأ أثناء النشر');
+
+      toast('✅ تم نشر الإعلان بنجاح!', 'success');
+      form.reset();
+      const msgDiv = document.getElementById('resultMessage');
+      if (msgDiv) {
+        msgDiv.innerHTML = `<p style="color: #006c35; font-weight: 700;">✅ تم النشر! <a href="/product.html?id=${result.id}" target="_blank">عرض الإعلان</a></p>`;
+      }
+    } catch (error) {
+      toast(error.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+}
+// ==================================================
+
 function init() {
   shell();
   initCalculator();
@@ -384,6 +431,8 @@ function init() {
   transactionPage();
   dashboardPage();
   loadNotifications();
+  initProductForm(); // تفعيل معالج النموذج
+
   const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } }), { threshold: 0.12 });
   $$('.reveal, .section').forEach(el => observer.observe(el));
 }
