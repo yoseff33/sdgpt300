@@ -1,8 +1,115 @@
-import{api,money,token}from'./api.js';import{shell}from'./components.js';shell();
-const $=s=>document.querySelector(s),status={pending_payment:'بانتظار الدفع',funds_held:'المبلغ محفوظ',shipped:'تم التسليم',completed:'مكتملة',disputed:'نزاع مفتوح',cancelled:'ملغاة'};
-async function home(){const grid=$('#products');if(!grid)return;async function load(){try{const q=new URLSearchParams(new FormData($('#filters')));const rows=await api(`/products?${q}`);grid.innerHTML=rows.length?rows.map(p=>`<article class="card"><img src="${p.image_url||'/assets/img/placeholder.svg'}" alt=""><span class="tag">${p.category}</span><h3>${p.title}</h3><p>${p.description||''}</p><b>${money(p.price)}</b><a class="button" href="/product.html?id=${p.id}">عرض المنتج</a></article>`).join(''):'<p>لا توجد نتائج.</p>'}catch(e){grid.innerHTML=`<p class="error">${e.message}</p>`}}$('#filters').addEventListener('submit',e=>{e.preventDefault();load()});load();}home();
-$('#auth')?.addEventListener('submit',async e=>{e.preventDefault();const fd=Object.fromEntries(new FormData(e.target));try{const data=await api(`/auth/${fd.mode}`,{method:'POST',body:JSON.stringify(fd)});if(fd.mode==='signup'){$('#msg').textContent='تم إنشاء الحساب. تحقق من بريدك ثم سجل الدخول.'}else{localStorage.setItem('damanak_token',data.session.access_token);location.href='/dashboard.html'}}catch(x){$('#msg').textContent=x.message}});
-async function product(){if(!$('#product'))return;try{const p=await api(`/products/${new URLSearchParams(location.search).get('id')}`);$('#product').innerHTML=`<img src="${p.image_url||'/assets/img/placeholder.svg'}"><section><span class="tag">${p.category}</span><h1>${p.title}</h1><p>${p.description||''}</p><h2>${money(p.price)}</h2><p>فترة الفحص: ${p.inspection_hours} ساعة · البائع ${p.seller?.nafath_verified?'موثق ✓':'غير موثق'}</p><button id="buy">شراء بضمان</button></section>`;$('#buy').onclick=async()=>{if(!token())return location.href='/login.html';try{const tx=await api('/transactions',{method:'POST',body:JSON.stringify({product_id:p.id,seller_id:p.seller_id,amount:p.price,inspection_hours:p.inspection_hours})});location.href=`/transaction.html?id=${tx.id}`}catch(e){alert(e.message)}}}catch(e){$('#product').textContent=e.message}}product();
-async function transaction(){if(!$('#transaction'))return;try{const id=new URLSearchParams(location.search).get('id'),t=await api(`/transactions/${id}`);$('#transaction').innerHTML=`<div class="card"><span class="status">${status[t.status]}</span><h1>${t.product?.title||'معاملة مباشرة'}</h1><h2>${money(t.amount)}</h2><p>${t.description||''}</p><p>العمولة ${money(t.commission)}</p>${t.inspection_deadline?`<p data-deadline="${t.inspection_deadline}"></p>`:''}<div class="actions">${t.status==='pending_payment'?'<button data-pay="moyasar">مدى / فيزا</button><button data-pay="tabby">تابي</button><button data-pay="tamara">تمارا</button>':''}${t.status==='funds_held'?'<button id="ship">تأكيد التسليم</button>':''}${t.status==='shipped'?'<button id="receive">تأكيد الاستلام</button>':''}${['funds_held','shipped'].includes(t.status)?'<button class="danger" id="dispute">فتح نزاع</button>':''}<button id="share">نسخ رابط المشاركة</button></div></div>`;document.querySelectorAll('[data-pay]').forEach(b=>b.onclick=async()=>{try{const x=await api('/payments/create-session',{method:'POST',body:JSON.stringify({transactionId:id,method:b.dataset.pay})});location.href=x.redirect_url}catch(e){alert(e.message)}});$('#ship')?.addEventListener('click',()=>act('ship'));$('#receive')?.addEventListener('click',()=>act('confirm-receipt'));$('#dispute')?.addEventListener('click',async()=>{const reason=prompt('سبب النزاع');if(reason)await api(`/transactions/${id}/raise-dispute`,{method:'PUT',body:JSON.stringify({reason,description:reason})});location.reload()});$('#share').onclick=()=>navigator.clipboard.writeText(location.href);async function act(a){await api(`/transactions/${id}/${a}`,{method:'PUT'});location.reload()}const d=$('[data-deadline]');if(d)setInterval(()=>d.textContent=`الوقت المتبقي: ${Math.max(0,Math.floor((new Date(d.dataset.deadline)-Date.now())/1000))} ثانية`,1000)}catch(e){$('#transaction').textContent=e.message}}transaction();
-async function dashboard(){if(!$('#dashboard'))return;try{const rows=await api('/transactions');$('#dashboard').innerHTML=`<h1>لوحة التحكم</h1><div class="stats"><div class="card"><small>المعاملات</small><strong>${rows.length}</strong></div><div class="card"><small>المبالغ</small><strong>${money(rows.reduce((s,x)=>s+Number(x.amount),0))}</strong></div></div><div class="panel"><h2>معاملاتي</h2>${rows.map(x=>`<a class="row" href="/transaction.html?id=${x.id}"><span>${x.product?.title||'معاملة مباشرة'}</span><b>${money(x.amount)}</b><em>${status[x.status]}</em></a>`).join('')||'لا توجد معاملات'}</div>`}catch(e){$('#dashboard').innerHTML=`<p class="error">${e.message}</p><a class="button" href="/login.html">تسجيل الدخول</a>`}}dashboard();
-if(token())api('/notifications').then(n=>$('#badge').textContent=n.filter(x=>!x.read).length).catch(()=>{});
+// ===== استيراد api =====
+import { api, token, money } from './api.js';
+
+// ===== الهيدر والفوتر =====
+async function loadHeaderFooter() {
+  // يمكنك وضع HTML للهيدر والفوتر هنا أو جلبها من ملفات خارجية
+  // لكن سنقوم ببنائهما ديناميكياً لتبسيط الأمور
+  const headerHTML = `
+    <header>
+      <div class="brand">ضمانك</div>
+      <nav>
+        <a href="/index.html" class="active">الرئيسية</a>
+        <a href="/dashboard.html">لوحة التحكم</a>
+        <a href="/product.html">المنتجات</a>
+        <a href="/how-it-works.html">كيف تعمل؟</a>
+        <a href="/contact.html">تواصل</a>
+        <button id="themeToggle" aria-label="تغيير الثيم">🌙</button>
+      </nav>
+    </header>
+  `;
+
+  const footerHTML = `
+    <footer>
+      <div><h4>ضمانك</h4><p>منصة الضمان الرقمي الأولى</p></div>
+      <div><h4>روابط سريعة</h4><a href="/index.html">الرئيسية</a><br /><a href="/dashboard.html">المعاملات</a></div>
+      <div><h4>تواصل</h4><a href="mailto:support@damanak.com">support@damanak.com</a></div>
+      <small>© 2026 ضمانك. جميع الحقوق محفوظة</small>
+    </footer>
+  `;
+
+  document.querySelector('[data-header]')?.replaceWith?.(document.createRange().createContextualFragment(headerHTML));
+  document.querySelector('[data-footer]')?.replaceWith?.(document.createRange().createContextualFragment(footerHTML));
+
+  // إضافة مستمع لزر الثيم بعد تحميل الهيدر
+  document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+}
+
+// ===== الثيم =====
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark');
+  localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+  }
+}
+
+function loadTheme() {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark');
+  }
+  updateThemeIcon();
+}
+
+// ===== تهيئة عامة =====
+document.addEventListener('DOMContentLoaded', async () => {
+  loadTheme();
+  await loadHeaderFooter();
+  // تنفيذ أي وظائف خاصة بالصفحة حسب وجود عناصر معينة
+  initPage();
+});
+
+// ===== وظائف خاصة بالصفحات =====
+function initPage() {
+  // مثال: تحميل المعاملات في الصفحة الرئيسية
+  if (document.getElementById('products')) {
+    loadProducts();
+  }
+  if (document.getElementById('transaction')) {
+    loadTransaction();
+  }
+  if (document.getElementById('dashboard')) {
+    loadDashboard();
+  }
+  // إلخ...
+}
+
+// ===== دوال تحميل البيانات =====
+async function loadProducts() {
+  try {
+    const data = await api('/products'); // افتراضي
+    const container = document.getElementById('products');
+    if (!container) return;
+    if (data.length === 0) {
+      container.innerHTML = '<p class="text-muted text-center">لا توجد منتجات</p>';
+      return;
+    }
+    container.innerHTML = data.map(p => `
+      <div class="card">
+        <img src="${p.image || 'https://placehold.co/300x180?text=منتج'}" alt="${p.title}">
+        <h3>${p.title}</h3>
+        <div class="price">${money(p.price)}</div>
+        <div class="seller">${p.seller_name || 'بائع'}</div>
+        <a href="/product.html?id=${p.id}" class="button small">تفاصيل</a>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('فشل تحميل المنتجات:', error);
+  }
+}
+
+async function loadTransaction() {
+  // تنفيذ خاص بالصفحة
+}
+
+async function loadDashboard() {
+  // تنفيذ خاص بالصفحة
+}
+
+// ===== تصدير بعض الدوال للاستخدام في الصفحات =====
+export { api, token, money, loadProducts };
