@@ -3,7 +3,7 @@ import { api, money, token } from './api.js';
 // ==============================
 // عنوان الخادم الخلفي (غيّره حسب الحاجة)
 // ==============================
-const API_BASE_URL = 'https://sdgpt300.onrender.com'; // استخدم الرابط الجديد
+const API_BASE_URL = 'https://sdgpt300.onrender.com';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -256,10 +256,8 @@ async function productPage() {
   const container = $('#product');
   if (!container) return;
   const id = new URLSearchParams(location.search).get('id');
-  // إذا لم يوجد id، نكون في صفحة إضافة الإعلان (النموذج موجود)، نخرج بدون تنفيذ
   if (!id) return;
 
-  // باقي الكود لعرض تفاصيل المنتج
   try {
     const product = await api(`/products/${encodeURIComponent(id)}`);
     container.innerHTML = `
@@ -402,15 +400,12 @@ function initProductForm() {
       }
 
       const formData = new FormData(form);
-
-      // استخدام المسار الكامل مع API_BASE_URL
       const res = await fetch(`${API_BASE_URL}/api/products`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${tok}` },
         body: formData
       });
 
-      // محاولة قراءة الرد كـ JSON، وإذا فشل نعطي رسالة واضحة
       let result;
       const text = await res.text();
       try {
@@ -446,7 +441,7 @@ function init() {
   transactionPage();
   dashboardPage();
   loadNotifications();
-  initProductForm(); // تفعيل معالج النموذج
+  initProductForm();
 
   const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } }), { threshold: 0.12 });
   $$('.reveal, .section').forEach(el => observer.observe(el));
