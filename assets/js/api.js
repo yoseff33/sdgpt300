@@ -1,11 +1,9 @@
 const TOKEN_KEY = 'damanak_token';
 
 /**
- * رابط الباك إند الحقيقي الخارجي (مثال: https://your-backend.onrender.com/api)
- * إذا حطيت الرابط في window.DAMANAK_CONFIG بياخذه مباشرة، 
- * وإذا ما حطيته راح يستبدل الرابط الافتراضي بالرابط اللي تحطه تحت بدال الرابط الاحتياطي.
+ * رابط الباك إند الحقيقي المرفوع على Render
  */
-const DEFAULT_BACKEND_URL = 'https://damanak-backend.example.com/api'; // استبدل هذا برابط سيرفرك الحقيقي
+const DEFAULT_BACKEND_URL = 'https://sdgpt300.onrender.com/api';
 
 const configuredBaseUrl = window.DAMANAK_CONFIG?.apiBaseUrl?.trim();
 const API_BASE_URL = (configuredBaseUrl || DEFAULT_BACKEND_URL).replace(/\/+$/, '');
@@ -46,13 +44,13 @@ function getErrorMessage(response, data) {
   if (data?.error) return data.error;
   if (data?.message) return data.message;
 
-  if (response.status === 401) return 'انتهت جلسة الدخول. سجل دخولك من جديد.';
-  if (response.status === 403) return 'ما عندك صلاحية لتنفيذ هالإجراء.';
-  if (response.status === 404) return 'الخدمة أو البيانات المطلوبة غير موجودة.';
-  if (response.status === 429) return 'طلباتك كثيرة حالياً. جرّب بعد شوي.';
-  if (response.status >= 500) return 'صار خلل بالخدمة. جرّب مرة ثانية بعد شوي.';
+  if (response.status === 401) return 'انتهت جلسة الدخول سجل دخولك من جديد';
+  if (response.status === 403) return 'ما عندك صلاحية لتنفيذ هالإجراء';
+  if (response.status === 404) return 'الخدمة أو البيانات المطلوبة غير موجودة';
+  if (response.status === 429) return 'طلباتك كثيرة حالياً جرب بعد شوي';
+  if (response.status >= 500) return 'صار خلل بالخدمة جرب مرة ثانية بعد شوي';
 
-  return 'تعذر إكمال الطلب.';
+  return 'تعذر إكمال الطلب';
 }
 
 export async function api(path, options = {}) {
@@ -98,11 +96,11 @@ export async function api(path, options = {}) {
     return data;
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('تأخر الاتصال بالخدمة. تأكد من الشبكة وجرّب مرة ثانية.');
+      throw new Error('تأخر الاتصال بالخدمة تأكد من الشبكة وجرب مرة ثانية');
     }
 
     if (error instanceof TypeError) {
-      throw new Error('تعذر الاتصال بالخدمة. تأكد أن رابط الباك إند صحيح وأن CORS مفعّل.');
+      throw new Error('تعذر الاتصال بالخدمة تأكد أن رابط الباك إند صحيح وأن CORS مفعّل');
     }
 
     throw error;
