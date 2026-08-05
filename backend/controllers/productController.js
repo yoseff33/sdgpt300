@@ -62,6 +62,8 @@ export async function list(req, res) {
   let query = admin
     .from('products')
     .select('*,seller:profiles!products_seller_id_fkey(full_name,nafath_verified)')
+    .eq('status', 'active')
+    .eq('moderation_status', 'approved')
     .order('created_at', { ascending: false });
 
   if (req.query.category) query = query.eq('category', req.query.category);
@@ -79,6 +81,8 @@ export async function get(req, res) {
     .from('products')
     .select('*,seller:profiles!products_seller_id_fkey(full_name,nafath_verified)')
     .eq('id', req.params.id)
+    .eq('status', 'active')
+    .eq('moderation_status', 'approved')
     .single();
 
   if (error || !data) return res.status(404).json({ error: 'المنتج غير موجود' });
