@@ -255,6 +255,8 @@ async function productPage() {
 
   try {
     const product = await api(`/products/${encodeURIComponent(id)}`);
+    const availableQuantity = Math.max(0, Number(product.quantity || 0) - Number(product.reserved_quantity || 0));
+    const shareText = `شوف هذا المنتج في منصة ضمانك:\n${product.title}\nالسعر: ${money(product.price)}\nالرابط: ${location.href}`;
     container.innerHTML = `
       <img src="${escapeHtml(product.image_url || 'assets/img/placeholder.svg')}" alt="${escapeHtml(product.title)}">
       <section class="card">
@@ -263,10 +265,14 @@ async function productPage() {
         <h2>${money(product.price)}</h2>
         <p>${escapeHtml(product.description || '')}</p>
         <p><strong>مهلة الفحص:</strong> ${Number(product.inspection_hours || 24)} ساعة</p>
+        <p><strong>الكمية المتاحة:</strong> ${availableQuantity}${availableQuantity > 0 && availableQuantity <= Number(product.low_stock_threshold || 2) ? ' · تبقت كمية قليلة!' : ''}</p>
         <p><strong>البائع:</strong> ${escapeHtml(product.seller?.full_name || 'غير ظاهر')} · ${product.seller?.nafath_verified ? 'موثق ✓' : 'غير موثق'}</p>
         <div class="calculator-note">لا تحول أي مبلغ خارج ضمانك إذا تبي حماية الصفقة.</div>
-        <div class="actions"><button id="buy" class="button button--primary">ابدأ صفقة مضمونة</button><a class="button button--secondary" href="contact.html">تواصل مع البائع</a></div>
+        <div class="actions"><button id="buy" class="button button--primary" ${availableQuantity < 1 ? 'disabled' : ''}>${availableQuantity < 1 ? 'نفدت الكمية' : 'ابدأ صفقة مضمونة'}</button><button id="shareWhatsApp" class="button button--secondary">شارك عبر واتساب</button><a class="button button--secondary" href="contact.html">تواصل مع البائع</a></div>
+        <div class="calculator-note"><strong>خدمات إضافية:</strong> الفحص المتقدم، تأمين الشحنة، والتصوير الاحترافي — الخدمة غير مفعلة حالياً.</div>
       </section>`;
+
+    $('#shareWhatsApp')?.addEventListener('click', () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener'));
 
     $('#buy')?.addEventListener('click', async () => {
       if (!token()) return location.href = 'login.html';
@@ -296,7 +302,8 @@ async function transactionPage() {
         <span class="status ${escapeHtml(transaction.status)}">${escapeHtml(statusMap[transaction.status] || transaction.status)}</span>
         <h1>${escapeHtml(transaction.product?.title || 'صفقة مباشرة')}</h1>
         <h2>${money(transaction.amount)}</h2>
-        <p>رسوم ضمانك: ${money(transaction.commission)}</p>
+        <p>عمولة ضمانك: ${money(transaction.commission)} · ضريبة العمولة: ${money(transaction.commission_vat || 0)}</p>
+        <p><strong>إجمالي المشتري:</strong> ${money(transaction.buyer_total || transaction.amount)} · <strong>صافي البائع:</strong> ${money(transaction.seller_net ?? (Number(transaction.amount)-Number(transaction.commission||0)))}</p>
         ${transaction.inspection_deadline ? `<p id="deadline" data-deadline="${escapeHtml(transaction.inspection_deadline)}"></p>` : ''}
         <div class="actions">
           ${transaction.status === 'pending_payment' ? '<button data-pay="moyasar">مدى / Apple Pay</button><button data-pay="tabby">تابي</button><button data-pay="tamara">تمارا</button>' : ''}
@@ -304,6 +311,7 @@ async function transactionPage() {
           ${transaction.status === 'shipped' ? '<button id="receive">استلمت وكل شيء تمام</button>' : ''}
           ${['funds_held', 'shipped'].includes(transaction.status) ? '<button class="button danger" id="dispute">عندي مشكلة بالصفقة</button>' : ''}
           <button class="button button--secondary" id="share">نسخ رابط الصفقة</button>
+          ${['completed','refunded','cancelled'].includes(transaction.status) ? `<a class="button button--secondary" href="invoice.html?id=${encodeURIComponent(transaction.id)}">عرض الفاتورة</a>` : ''}
         </div>
       </div>`;
 
