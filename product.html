@@ -1,194 +1,24 @@
+
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="إضافة إعلان جديد على منصة ضمانك">
+  <meta name="description" content="تفاصيل الإعلان على منصة ضمانك">
   <meta name="theme-color" content="#006c35">
-  <title>إضافة إعلان جديد | ضمانك</title>
+  <title>تفاصيل الإعلان | ضمانك</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
-  <style>
-    /* تحسينات بسيطة للنموذج */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    .form-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid #e2e8f0;
-      border-radius: 0.75rem;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-      background: #fff;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #006c35;
-      box-shadow: 0 0 0 3px rgba(0, 108, 53, 0.1);
-    }
-    .form-group textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
-    .form-group .hint {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin-top: 0.25rem;
-    }
-    .btn-submit {
-      background: #006c35;
-      color: #fff;
-      border: none;
-      padding: 0.9rem 2.5rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      border-radius: 2rem;
-      cursor: pointer;
-      transition: background 0.2s;
-      width: 100%;
-      margin-top: 1rem;
-    }
-    .btn-submit:hover {
-      background: #004d25;
-    }
-    .btn-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .toast-container {
-      position: fixed;
-      top: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      width: 90%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      pointer-events: none;
-    }
-    .toast {
-      padding: 1rem 1.5rem;
-      border-radius: 1rem;
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      animation: slideDown 0.3s ease;
-      pointer-events: auto;
-    }
-    .toast-success { background: #006c35; }
-    .toast-error { background: #dc2626; }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
 </head>
 <body class="inner-page">
   <a class="skip-link" href="#main-content">تجاوز إلى المحتوى</a>
   <div data-header></div>
   <main id="main-content" class="container page-main">
-    <div class="card" style="max-width: 720px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-      <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">📦 إضافة إعلان جديد</h1>
-      <p style="color: #64748b; margin-bottom: 2rem;">املأ البيانات التالية لنشر منتجك على المنصة</p>
-      
-      <form id="createProductForm" enctype="multipart/form-data">
-        <!-- حقل العنوان -->
-        <div class="form-group">
-          <label for="title">عنوان الإعلان <span style="color: #dc2626;">*</span></label>
-          <input type="text" id="title" name="title" required minlength="3" maxlength="120" placeholder="مثال: آيفون 15 برو - بحالة ممتازة">
-          <div class="hint">بين 3 و 120 حرفاً</div>
-        </div>
-
-        <!-- حقل السعر -->
-        <div class="form-group">
-          <label for="price">السعر (ريال سعودي) <span style="color: #dc2626;">*</span></label>
-          <input type="number" id="price" name="price" required min="1" step="0.01" placeholder="مثال: 2500.00">
-        </div>
-
-        <!-- حقل التصنيف -->
-        <div class="form-group">
-          <label for="category">التصنيف <span style="color: #dc2626;">*</span></label>
-          <input type="text" id="category" name="category" required placeholder="مثال: إلكترونيات، عقارات، سيارات، أثاث">
-          <div class="hint">اختر تصنيفاً مناسباً</div>
-        </div>
-
-        <!-- حقل الوصف -->
-        <div class="form-group">
-          <label for="description">الوصف</label>
-          <textarea id="description" name="description" placeholder="اكتب تفاصيل المنتج، حالته، سبب البيع... (اختياري)"></textarea>
-        </div>
-
-        <!-- حقل رابط الإعلان الخارجي (اختياري) - أضفناه حسب طلبك -->
-        <div class="form-group">
-          <label for="external_url">رابط الإعلان (خارجي)</label>
-          <input type="url" id="external_url" name="external_url" placeholder="https://example.com/my-product">
-          <div class="hint">رابط لمشاهدة الإعلان في موقع آخر (اختياري)</div>
-        </div>
-
-        <!-- حقل المدينة (اختياري) -->
-        <div class="form-group">
-          <label for="city">المدينة</label>
-          <input type="text" id="city" name="city" placeholder="مثال: الرياض، جدة، الدمام">
-        </div>
-
-        <!-- حقل الحالة (اختياري) -->
-        <div class="form-group">
-          <label for="condition">حالة المنتج</label>
-          <select id="condition" name="condition">
-            <option value="">اختر الحالة</option>
-            <option value="جديد">جديد</option>
-            <option value="مستخدم">مستخدم</option>
-            <option value="مجدّد">مجدّد</option>
-          </select>
-        </div>
-
-        <!-- حقل الكمية -->
-        <div class="form-group">
-          <label for="quantity">الكمية المتاحة</label>
-          <input type="number" id="quantity" name="quantity" value="1" min="1" step="1">
-        </div>
-
-        <!-- حقل مهلة الفحص -->
-        <div class="form-group">
-          <label for="inspection_hours">مهلة الفحص (ساعات)</label>
-          <input type="number" id="inspection_hours" name="inspection_hours" value="24" min="1" max="168">
-          <div class="hint">حد أقصى 168 ساعة (7 أيام)</div>
-        </div>
-
-        <!-- حقل رفع الصورة -->
-        <div class="form-group">
-          <label for="image">الصورة الرئيسية</label>
-          <input type="file" id="image" name="image" accept="image/*">
-          <div class="hint">يفضل صورة واضحة بحجم أقل من 5 ميجابايت</div>
-        </div>
-
-        <button type="submit" class="btn-submit" id="submitBtn">🚀 نشر الإعلان</button>
-      </form>
-
-      <div id="resultMessage" style="margin-top: 1.5rem; text-align: center;"></div>
-    </div>
+    <div id="product" aria-live="polite">جارٍ تحميل الإعلان…</div>
   </main>
   <div data-footer></div>
-  
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-
   <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
