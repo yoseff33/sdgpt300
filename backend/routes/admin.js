@@ -157,7 +157,7 @@ router.get('/fraud-alerts', async (_req, res) => {
   res.json(data);
 });
 router.get('/audit-logs', async (_req, res) => {
-  const { data, error } = await admin.from('admin_audit_logs').select('*,admin:profiles!admin_audit_logs_admin_id_fkey(full_name)').order('created_at', { ascending: false }).limit(300);
+  const { data, error } = await admin.from('admin_audit_logs').select('*').order('created_at', { ascending: false }).limit(300);
   if (error) throw error;
   res.json(data);
 });
@@ -168,7 +168,9 @@ router.put('/transactions/:id/resolve-dispute', async (req, res) => {
   const { data: tx, error } = await admin.from('transactions').select('*').eq('id', req.params.id).single();
   if (error) throw error;
   await admin.from('disputes').update({ status: 'resolved', resolved_by: req.user.id, admin_notes: notes, resolution: beneficiary }).eq('transaction_id', tx.id).eq('status', 'open');
-  await admin.from('transactions').update({ status: beneficiary === 'seller' ? 'completed' : 'cancelled' }).eq('id', tx.id);
+  if (beneficiary === 'buyer' && tx.product_id) await admin.rpc('restore_transaction_stock', { p_transaction_id: tx.id });
+  const finalStatus = beneficiary === 'seller' ? 'completed' : 'refunded';
+  await admin.from('transactions').update({ status: finalStatus, final_reason: String(notes || '').slice(0,1000), completed_at: new Date().toISOString(), wallet_credited_at: beneficiary === 'seller' ? new Date().toISOString() : null }).eq('id', tx.id);
   await audit(req, 'resolve_dispute', 'transaction', tx.id, { beneficiary, notes });
   res.json({ resolved: true });
 });

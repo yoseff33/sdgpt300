@@ -2,6 +2,7 @@ import { admin } from '../utils/supabase.js';
 import { analyzeTransaction } from '../utils/fraudDetection.js';
 
 const COMMISSION_RATE = Number(process.env.COMMISSION_RATE || 0.03);
+const VAT_RATE = Number(process.env.VAT_RATE || 0.15);
 const MIN_INSPECTION_HOURS = 1;
 const MAX_INSPECTION_HOURS = 168;
 
@@ -20,46 +21,31 @@ export async function create(req, res) {
 
   const { data: product, error: productError } = await admin
     .from('products')
-    .select('id,title,price,seller_id,inspection_hours,status,quantity')
+    .select('id,inspection_hours')
     .eq('id', productId)
     .single();
 
   if (productError || !product) return res.status(404).json({ error: 'المنتج غير موجود' });
-  if (product.status && product.status !== 'active') return res.status(409).json({ error: 'المنتج غير متاح حالياً' });
-  if (Number(product.quantity ?? 1) < 1) return res.status(409).json({ error: 'المنتج غير متوفر حالياً' });
-  if (product.seller_id === req.user.id) return res.status(422).json({ error: 'ما تقدر تشتري منتجك' });
-
-  const amount = Number(product.price);
-  if (!Number.isFinite(amount) || amount <= 0) return res.status(422).json({ error: 'سعر المنتج غير صالح' });
-
   const requestedHours = Number(req.body.inspection_hours || product.inspection_hours || 24);
   const inspectionHours = Math.min(MAX_INSPECTION_HOURS, Math.max(MIN_INSPECTION_HOURS, requestedHours));
-  const commission = Number((amount * COMMISSION_RATE).toFixed(2));
-
-  const transaction = {
-    product_id: product.id,
-    buyer_id: req.user.id,
-    seller_id: product.seller_id,
-    amount,
-    commission,
-    description: product.title,
-    inspection_hours: inspectionHours,
-    status: 'pending_payment'
-  };
-
   const { data, error } = await admin
-    .from('transactions')
-    .insert(transaction)
-    .select()
-    .single();
+    .rpc('create_stock_transaction', {
+      p_product_id: product.id,
+      p_buyer_id: req.user.id,
+      p_inspection_hours: inspectionHours,
+      p_commission_rate: COMMISSION_RATE,
+      p_vat_rate: VAT_RATE
+    });
 
-  if (error) throw error;
-  await analyzeTransaction(data);
+  if (error) return res.status(409).json({ error: error.message || 'تعذر حجز المنتج' });
+  const createdTransaction = Array.isArray(data) ? data[0] : data;
+  if (!createdTransaction?.id) return res.status(500).json({ error: 'تعذر إنشاء الصفقة' });
+  await analyzeTransaction(createdTransaction);
 
   const appUrl = (process.env.APP_URL || '').split(',')[0].replace(/\/$/, '');
   res.status(201).json({
-    ...data,
-    share_url: appUrl ? `${appUrl}/transaction.html?id=${data.id}` : undefined
+    ...createdTransaction,
+    share_url: appUrl ? `${appUrl}/transaction.html?id=${createdTransaction.id}` : undefined
   });
 }
 
@@ -116,6 +102,10 @@ async function updateStatus(req, res, expectedStatus, nextStatus, party) {
   }
 
   const changes = { status: nextStatus };
+  if (nextStatus === 'completed') {
+    changes.completed_at = new Date().toISOString();
+    changes.wallet_credited_at = changes.completed_at;
+  }
   if (nextStatus === 'shipped') {
     changes.inspection_deadline = new Date(
       Date.now() + Number(transaction.inspection_hours || 24) * 3_600_000
@@ -201,12 +191,16 @@ export async function createPaymentLink(req, res) {
   // حساب العمولة
   const rate = Number(process.env.COMMISSION_RATE || 0.03);
   const commission = Number((finalAmount * rate).toFixed(2));
+  const commissionVat = Number((commission * VAT_RATE).toFixed(2));
 
   // إنشاء المعاملة مباشرة بدون منتج (product_id = null)
   const transaction = {
     seller_id: req.user.id,
     amount: finalAmount,
     commission,
+    commission_vat: commissionVat,
+    buyer_total: Number((finalAmount + commission + commissionVat).toFixed(2)),
+    seller_net: Number((finalAmount - commission - commissionVat).toFixed(2)),
     description: finalDescription,
     status: 'pending_payment',
     buyer_id: null, // يترك فارغاً حتى يدفع المشتري

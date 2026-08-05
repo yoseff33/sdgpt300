@@ -10,7 +10,9 @@ const ALLOWED_FIELDS = [
   'inspection_hours',
   'city',
   'condition',
-  'external_url' // <--- تمت الإضافة
+  'external_url',
+  'product_type',
+  'low_stock_threshold'
 ];
 
 function cleanProductPayload(body, { partial = false } = {}) {
@@ -32,6 +34,10 @@ function cleanProductPayload(body, { partial = false } = {}) {
   if (payload.category !== undefined) payload.category = String(payload.category || '').trim().slice(0, 80);
   if (payload.city !== undefined) payload.city = String(payload.city || '').trim().slice(0, 80);
   if (payload.condition !== undefined) payload.condition = String(payload.condition || '').trim().slice(0, 30);
+  if (payload.product_type !== undefined) {
+    payload.product_type = String(payload.product_type || 'single');
+    if (!['single', 'multi'].includes(payload.product_type)) throw Object.assign(new Error('نوع المخزون غير صالح'), { status: 422 });
+  }
   if (payload.external_url !== undefined) {
     payload.external_url = String(payload.external_url || '').trim().slice(0, 500);
   }
@@ -45,7 +51,11 @@ function cleanProductPayload(body, { partial = false } = {}) {
 
   if (payload.quantity !== undefined || !partial) {
     payload.quantity = Math.max(1, Math.floor(Number(payload.quantity || 1)));
+    if ((payload.product_type || body.product_type) === 'single') payload.quantity = 1;
   }
+
+  if (payload.low_stock_threshold !== undefined) payload.low_stock_threshold = Math.max(1, Math.floor(Number(payload.low_stock_threshold || 2)));
+  if (payload.product_type === 'single') payload.quantity = 1;
 
   if (payload.inspection_hours !== undefined || !partial) {
     const hours = Number(payload.inspection_hours || 24);

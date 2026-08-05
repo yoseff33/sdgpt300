@@ -32,7 +32,7 @@
         <div class="card stat"><small>تحت الفحص</small><strong id="buyerInspection">0</strong></div>
         <div class="card stat"><small>طلبات مكتملة</small><strong id="buyerCompleted">0</strong></div>
       </div>
-      <section class="card"><div class="section-heading"><h2>مشترياتي</h2><a class="button button--secondary" href="index.html#market">تصفح السوق</a></div><div id="buyerOrders"></div></section>
+      <section class="card"><div class="section-heading"><h2>سجل مشترياتي</h2><div><select id="buyerStatus"><option value="">كل الحالات</option><option value="completed">مكتملة</option><option value="refunded">مسترجعة</option><option value="cancelled">ملغاة</option><option value="shipped">تحت الفحص</option></select> <button class="button button--secondary" id="buyerExport" type="button">تصدير Excel</button> <button class="button button--secondary print-report" type="button">طباعة PDF</button></div></div><div id="buyerOrders"></div></section>
     </section>
 
     <section id="sellerPanel" class="panel">
@@ -41,9 +41,10 @@
         <div class="card stat"><small>المبيعات المكتملة</small><strong id="sellerCompleted">0</strong></div>
         <div class="card stat"><small>رصيد معلّق</small><strong id="pendingBalance">0</strong></div>
         <div class="card stat"><small>متاح للسحب</small><strong id="availableBalance">0</strong></div>
+        <div class="card stat"><small>متوسط التقييم</small><strong id="sellerRating">0 / 5</strong></div>
       </div>
       <section class="card"><div class="section-heading"><h2>منتجاتي</h2><a class="button button--primary" href="create-product.html">إضافة منتج</a></div><div id="sellerProductList"></div></section>
-      <section class="card"><div class="section-heading"><h2>طلبات البيع</h2></div><div id="sellerOrders"></div></section>
+      <section class="card"><div class="section-heading"><h2>سجل مبيعاتي</h2><div><select id="sellerStatus"><option value="">كل الحالات</option><option value="completed">ناجحة</option><option value="refunded">فاشلة/مسترجعة</option><option value="cancelled">ملغاة</option><option value="shipped">تحت الفحص</option><option value="funds_held">قيد التجهيز</option></select> <button class="button button--secondary" id="sellerExport" type="button">تصدير Excel</button> <button class="button button--secondary print-report" type="button">طباعة PDF</button></div></div><div id="sellerOrders"></div></section>
     </section>
 
     <section class="card">
@@ -80,13 +81,25 @@
     const statusNames = {pending_payment:'بانتظار الدفع',funds_held:'تم حفظ المبلغ',shipped:'تحت الفحص',completed:'مكتمل',disputed:'متنازع عليه',cancelled:'ملغي',refunded:'مسترد'};
     let overview;
 
-    function orderTable(rows) {
+    function orderTable(rows, role = 'buyer') {
       if (!rows.length) return '<div class="empty">ما فيه طلبات حاليًا</div>';
-      return `<table class="account-table"><thead><tr><th>المنتج</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(row.product?.title || row.description || 'صفقة')}</td><td>${money(row.amount)}</td><td>${esc(statusNames[row.status] || row.status)}</td><td><a href="transaction.html?id=${encodeURIComponent(row.id)}">التفاصيل</a></td></tr>`).join('')}</tbody></table>`;
+      return `<table class="account-table"><thead><tr><th>رقم الطلب</th><th>المنتج</th><th>التاريخ</th><th>القيمة</th>${role === 'seller' ? '<th>العمولة</th><th>الصافي</th>' : ''}<th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(String(row.id).slice(0,8))}</td><td>${esc(row.product?.title || row.description || 'صفقة')}</td><td>${new Date(row.created_at).toLocaleDateString('ar-SA')}</td><td>${money(role === 'buyer' ? (row.buyer_total || row.amount) : row.amount)}</td>${role === 'seller' ? `<td>${money(Number(row.commission||0)+Number(row.commission_vat||0))}</td><td>${money(row.seller_net ?? (Number(row.amount)-Number(row.commission||0)))}</td>` : ''}<td>${esc(statusNames[row.status] || row.status)}</td><td><a href="transaction.html?id=${encodeURIComponent(row.id)}">التفاصيل</a>${['completed','refunded','cancelled'].includes(row.status) ? ` · <a href="invoice.html?id=${encodeURIComponent(row.id)}">الفاتورة</a>` : ''}${role === 'buyer' && row.status === 'completed' ? ` · <button class="button button--secondary rate-seller" data-id="${row.id}">قيّم البائع</button>` : ''}</td></tr>`).join('')}</tbody></table>`;
     }
     function productTable(rows) {
       if (!rows.length) return '<div class="empty">ما أضفت منتجات حتى الآن</div>';
-      return `<table class="account-table"><thead><tr><th>المنتج</th><th>السعر</th><th>الكمية</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td><img src="${esc(row.image_url || 'assets/img/placeholder.svg')}" alt=""> ${esc(row.title)}</td><td>${money(row.price)}</td><td>${Number(row.quantity || 0)}</td><td>${esc(row.status || 'active')}</td><td><a href="product.html?id=${encodeURIComponent(row.id)}">عرض</a></td></tr>`).join('')}</tbody></table>`;
+      return `<table class="account-table"><thead><tr><th>المنتج</th><th>السعر</th><th>المتاح</th><th>المباع</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td><img src="${esc(row.image_url || 'assets/img/placeholder.svg')}" alt=""> ${esc(row.title)}</td><td>${money(row.price)}</td><td>${Math.max(0,Number(row.quantity||0)-Number(row.reserved_quantity||0))}</td><td>${Number(row.sold_quantity||0)}</td><td>${esc(row.status || 'active')}</td><td><a href="product.html?id=${encodeURIComponent(row.id)}">عرض</a> · <button class="button button--secondary share-product" data-id="${row.id}" data-title="${esc(row.title)}" data-price="${row.price}">واتساب</button></td></tr>`).join('')}</tbody></table>`;
+    }
+    function exportCsv(filename, rows, role) {
+      const headers = role === 'seller' ? ['رقم الطلب','المنتج','التاريخ','سعر البيع','العمولة والضريبة','صافي الربح','الحالة'] : ['رقم الطلب','المنتج','التاريخ','المبلغ المدفوع','الحالة'];
+      const values = rows.map(row => role === 'seller' ? [row.id,row.product?.title||row.description,row.created_at,row.amount,Number(row.commission||0)+Number(row.commission_vat||0),row.seller_net,row.status] : [row.id,row.product?.title||row.description,row.created_at,row.buyer_total||row.amount,row.status]);
+      const csv = '\ufeff' + [headers,...values].map(line => line.map(value => `"${String(value??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
+    }
+    async function loadReport(role) {
+      const select = $(`#${role}Status`); const report = await api(`/reports/account?role=${role}&status=${encodeURIComponent(select.value)}`);
+      $(`#${role}Orders`).innerHTML = orderTable(report.rows, role);
+      if (role === 'seller') $('#sellerRating').textContent = `${report.metrics.average_rating || 0} / 5`;
+      return report.rows;
     }
     function activateMode(mode, save = false) {
       document.querySelectorAll('[data-mode]').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
@@ -108,17 +121,25 @@
         $('#buyerActive').textContent = buyerRows.filter(x => ['pending_payment','funds_held','shipped'].includes(x.status)).length;
         $('#buyerInspection').textContent = buyerRows.filter(x => x.status === 'shipped').length;
         $('#buyerCompleted').textContent = buyerRows.filter(x => x.status === 'completed').length;
-        $('#buyerOrders').innerHTML = orderTable(buyerRows);
+        $('#buyerOrders').innerHTML = orderTable(buyerRows, 'buyer');
         $('#sellerProducts').textContent = products.length;
         $('#sellerCompleted').textContent = overview.seller.completed_sales || 0;
         $('#pendingBalance').textContent = money(overview.seller.pending_balance);
         $('#availableBalance').textContent = money(overview.seller.available_balance);
         $('#sellerProductList').innerHTML = productTable(products);
-        $('#sellerOrders').innerHTML = orderTable(sellerRows);
+        $('#sellerOrders').innerHTML = orderTable(sellerRows, 'seller');
         activateMode(localStorage.getItem('damanak_account_mode') || p.active_mode || 'buyer');
+        await Promise.all([loadReport('buyer'), loadReport('seller')]);
       } catch (error) { $('#pageMessage').textContent = error.message; }
     }
     document.querySelectorAll('[data-mode]').forEach(button => button.onclick = () => activateMode(button.dataset.mode, true));
+    $('#buyerStatus').onchange = () => loadReport('buyer');
+    $('#sellerStatus').onchange = () => loadReport('seller');
+    $('#buyerExport').onclick = async () => exportCsv('سجل-مشترياتي.csv', await loadReport('buyer'), 'buyer');
+    $('#sellerExport').onclick = async () => exportCsv('سجل-مبيعاتي.csv', await loadReport('seller'), 'seller');
+    document.querySelectorAll('.print-report').forEach(button => button.onclick = () => window.print());
+    $('#sellerProductList').onclick = event => { const button = event.target.closest('.share-product'); if (!button) return; const url = new URL(`product.html?id=${button.dataset.id}`, location.href).href; window.open(`https://wa.me/?text=${encodeURIComponent(`شوف هذا المنتج في منصة ضمانك:\n${button.dataset.title}\nالسعر: ${money(button.dataset.price)}\nالرابط: ${url}`)}`, '_blank', 'noopener'); };
+    $('#buyerOrders').onclick = async event => { const button = event.target.closest('.rate-seller'); if (!button) return; const score = Number(prompt('قيّم البائع من 1 إلى 5')); if (!score) return; const comment = prompt('اكتب تعليقك (اختياري)') || ''; try { await api(`/reports/ratings/${button.dataset.id}`, {method:'POST',body:JSON.stringify({score,comment})}); $('#pageMessage').textContent='تم حفظ تقييمك'; } catch(error) { $('#pageMessage').textContent=error.message; } };
     $('#profileForm').onsubmit = async event => {
       event.preventDefault();
       try { const data = Object.fromEntries(new FormData(event.currentTarget)); await api('/account', {method:'PUT',body:JSON.stringify(data)}); $('#pageMessage').textContent = 'تم حفظ بياناتك بنجاح'; }

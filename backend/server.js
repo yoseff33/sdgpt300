@@ -16,6 +16,7 @@ import support from './routes/support.js';
 import manager from './routes/manager.js';
 import notifications from './routes/notifications.js';
 import account from './routes/account.js';
+import reports from './routes/reports.js';
 
 // عميل Supabase
 import { admin } from './utils/supabase.js';
@@ -154,6 +155,7 @@ app.use('/api/support', support);
 app.use('/api/manager', manager);
 app.use('/api/notifications', notifications);
 app.use('/api/account', account);
+app.use('/api/reports', reports);
 
 // معالجة مسارات API غير الموجودة
 app.use('/api', (req, res) => {

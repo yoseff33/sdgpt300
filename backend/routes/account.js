@@ -28,9 +28,9 @@ router.get('/overview', async (req, res) => {
   const completedSales = sellerTransactions.filter(item => item.status === 'completed');
   const pendingBalance = sellerTransactions
     .filter(item => ['funds_held', 'shipped'].includes(item.status))
-    .reduce((sum, item) => sum + Number(item.amount || 0) - Number(item.commission || 0), 0);
+    .reduce((sum, item) => sum + Number(item.seller_net ?? (Number(item.amount || 0) - Number(item.commission || 0) - Number(item.commission_vat || 0))), 0);
   const availableBalance = completedSales
-    .reduce((sum, item) => sum + Number(item.amount || 0) - Number(item.commission || 0), 0);
+    .reduce((sum, item) => sum + Number(item.seller_net ?? (Number(item.amount || 0) - Number(item.commission || 0) - Number(item.commission_vat || 0))), 0);
 
   res.json({
     profile: req.user.profile,

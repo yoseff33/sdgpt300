@@ -161,8 +161,20 @@
 
         <!-- حقل الكمية -->
         <div class="form-group">
+          <label for="product_type">نوع المخزون</label>
+          <select id="product_type" name="product_type">
+            <option value="single">قطعة واحدة (مستعمل أو فريد)</option>
+            <option value="multi">منتج متعدد الكمية</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="quantity">الكمية المتاحة</label>
           <input type="number" id="quantity" name="quantity" value="1" min="1" step="1">
+          <div class="hint">القطعة الواحدة تثبت تلقائياً على 1</div>
+        </div>
+        <div class="form-group" id="lowStockGroup" hidden>
+          <label for="low_stock_threshold">تنبيه انخفاض المخزون عند</label>
+          <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="2" min="1" step="1">
         </div>
 
         <!-- حقل مهلة الفحص -->
@@ -191,5 +203,18 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script type="module" src="assets/js/app.js"></script>
+  <script>
+    const productType = document.getElementById('product_type');
+    const quantity = document.getElementById('quantity');
+    const lowStockGroup = document.getElementById('lowStockGroup');
+    function syncStockFields() {
+      const multiple = productType.value === 'multi';
+      quantity.readOnly = !multiple;
+      if (!multiple) quantity.value = '1';
+      lowStockGroup.hidden = !multiple;
+    }
+    productType.addEventListener('change', syncStockFields);
+    syncStockFields();
+  </script>
 </body>
 </html>
