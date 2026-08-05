@@ -8,45 +8,127 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .account-shell{display:grid;gap:1.25rem}.account-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}.mode-switch{display:flex;background:#edf4f0;border-radius:999px;padding:.3rem}.mode-switch button{border:0;background:transparent;padding:.75rem 1.4rem;border-radius:999px;font-weight:800;cursor:pointer}.mode-switch button.active{background:#006c35;color:#fff}.account-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}.stat{padding:1.2rem}.stat small{display:block;color:#64748b}.stat strong{font-size:1.5rem}.panel{display:none}.panel.active{display:grid;gap:1.25rem}.account-table{width:100%;border-collapse:collapse}.account-table th,.account-table td{padding:.8rem;border-bottom:1px solid #e5e7eb;text-align:right}.account-table img{width:50px;height:50px;object-fit:cover;border-radius:.7rem}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.profile-grid label{display:grid;gap:.4rem}.profile-grid input,.profile-grid textarea{width:100%;padding:.8rem;border:1px solid #cbd5e1;border-radius:.75rem}.wide{grid-column:1/-1}.empty{padding:1.5rem;text-align:center;color:#64748b}.verification{padding:.8rem 1rem;border-radius:.8rem;background:#fff7db;color:#765b00}.verification.verified{background:#e5f7ed;color:#006c35}@media(max-width:800px){.account-grid{grid-template-columns:repeat(2,1fr)}.profile-grid{grid-template-columns:1fr}.wide{grid-column:auto}.account-table{display:block;overflow:auto}}
+  </style>
 </head>
 <body class="inner-page">
   <div data-header></div>
-  <main class="container page-main">
-    <form class="form card" id="profile">
-      <h1>حسابي</h1>
-      <label>الاسم<input name="full_name"></label>
-      <label>الجوال<input name="phone"></label>
-      <button>حفظ</button>
-      <hr>
-      <h2>التحقق عبر نفاذ</h2>
-      <label>رقم الهوية<input name="national_id" inputmode="numeric" maxlength="10"></label>
-      <button type="button" id="nafath">بدء التحقق</button>
-      <p id="msg"></p>
-    </form>
+  <main class="container page-main account-shell">
+    <section class="card account-head">
+      <div><span class="eyebrow">حساب واحد لكل أعمالك</span><h1 id="welcome">حسابي</h1><p id="verification" class="verification">جارٍ التحقق من الحساب…</p></div>
+      <div class="mode-switch" aria-label="تبديل وضع الحساب">
+        <button type="button" data-mode="buyer">وضع المشتري</button>
+        <button type="button" data-mode="seller">وضع البائع</button>
+      </div>
+    </section>
+
+    <p id="pageMessage" role="status"></p>
+
+    <section id="buyerPanel" class="panel">
+      <div class="account-grid">
+        <div class="card stat"><small>كل مشترياتي</small><strong id="buyerTotal">0</strong></div>
+        <div class="card stat"><small>طلبات نشطة</small><strong id="buyerActive">0</strong></div>
+        <div class="card stat"><small>تحت الفحص</small><strong id="buyerInspection">0</strong></div>
+        <div class="card stat"><small>طلبات مكتملة</small><strong id="buyerCompleted">0</strong></div>
+      </div>
+      <section class="card"><div class="section-heading"><h2>مشترياتي</h2><a class="button button--secondary" href="index.html#market">تصفح السوق</a></div><div id="buyerOrders"></div></section>
+    </section>
+
+    <section id="sellerPanel" class="panel">
+      <div class="account-grid">
+        <div class="card stat"><small>منتجاتي</small><strong id="sellerProducts">0</strong></div>
+        <div class="card stat"><small>المبيعات المكتملة</small><strong id="sellerCompleted">0</strong></div>
+        <div class="card stat"><small>رصيد معلّق</small><strong id="pendingBalance">0</strong></div>
+        <div class="card stat"><small>متاح للسحب</small><strong id="availableBalance">0</strong></div>
+      </div>
+      <section class="card"><div class="section-heading"><h2>منتجاتي</h2><a class="button button--primary" href="create-product.html">إضافة منتج</a></div><div id="sellerProductList"></div></section>
+      <section class="card"><div class="section-heading"><h2>طلبات البيع</h2></div><div id="sellerOrders"></div></section>
+    </section>
+
+    <section class="card">
+      <h2>الملف الشخصي والمتجر</h2>
+      <form id="profileForm" class="profile-grid">
+        <label>الاسم الكامل<input name="full_name" maxlength="120"></label>
+        <label>اسم العرض<input name="display_name" maxlength="120"></label>
+        <label>رقم الجوال<input name="phone" inputmode="tel" maxlength="30"></label>
+        <label>المدينة<input name="city" maxlength="80"></label>
+        <label>اسم المتجر<input name="store_name" maxlength="120"></label>
+        <label>بريد الدعم<input name="support_email" type="email" maxlength="180"></label>
+        <label class="wide">وصف المتجر<textarea name="store_description" maxlength="500"></textarea></label>
+        <div class="wide"><button class="button button--primary" type="submit">حفظ البيانات</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>التوثيق والسحب</h2>
+      <p>تقدر تشتري وتنشر وتبيع بدون توثيق. التوثيق مطلوب فقط عند طلب سحب الأرباح.</p>
+      <div class="profile-grid">
+        <label>رقم الهوية<input id="nationalId" inputmode="numeric" maxlength="10"></label>
+        <div style="align-self:end"><button class="button button--secondary" type="button" id="nafath">بدء التحقق عبر نفاذ</button></div>
+      </div>
+      <p id="nafathMessage"></p>
+    </section>
   </main>
   <div data-footer></div>
   <script type="module" src="assets/js/app.js"></script>
   <script type="module">
-    import { api } from './assets/js/api.js';
-    const f = document.querySelector('#profile'), m = document.querySelector('#msg');
-    try {
-      const p = await api('/account');
-      f.full_name.value = p.full_name || '';
-      f.phone.value = p.phone || '';
-      m.textContent = p.nafath_verified ? 'موثق عبر نفاذ ✓' : '';
-    } catch(e) { m.textContent = e.message; }
-    f.onsubmit = async e => {
-      e.preventDefault();
-      await api('/account', { method: 'PUT', body: JSON.stringify({ full_name: f.full_name.value, phone: f.phone.value }) });
-      m.textContent = 'تم الحفظ';
-    };
-    document.querySelector('#nafath').onclick = async () => {
+    import { api, money, token } from './assets/js/api.js';
+    if (!token()) location.href = 'login.html';
+    const $ = selector => document.querySelector(selector);
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const statusNames = {pending_payment:'بانتظار الدفع',funds_held:'تم حفظ المبلغ',shipped:'تحت الفحص',completed:'مكتمل',disputed:'متنازع عليه',cancelled:'ملغي',refunded:'مسترد'};
+    let overview;
+
+    function orderTable(rows) {
+      if (!rows.length) return '<div class="empty">ما فيه طلبات حاليًا</div>';
+      return `<table class="account-table"><thead><tr><th>المنتج</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td>${esc(row.product?.title || row.description || 'صفقة')}</td><td>${money(row.amount)}</td><td>${esc(statusNames[row.status] || row.status)}</td><td><a href="transaction.html?id=${encodeURIComponent(row.id)}">التفاصيل</a></td></tr>`).join('')}</tbody></table>`;
+    }
+    function productTable(rows) {
+      if (!rows.length) return '<div class="empty">ما أضفت منتجات حتى الآن</div>';
+      return `<table class="account-table"><thead><tr><th>المنتج</th><th>السعر</th><th>الكمية</th><th>الحالة</th><th></th></tr></thead><tbody>${rows.map(row => `<tr><td><img src="${esc(row.image_url || 'assets/img/placeholder.svg')}" alt=""> ${esc(row.title)}</td><td>${money(row.price)}</td><td>${Number(row.quantity || 0)}</td><td>${esc(row.status || 'active')}</td><td><a href="product.html?id=${encodeURIComponent(row.id)}">عرض</a></td></tr>`).join('')}</tbody></table>`;
+    }
+    function activateMode(mode, save = false) {
+      document.querySelectorAll('[data-mode]').forEach(button => button.classList.toggle('active', button.dataset.mode === mode));
+      $('#buyerPanel').classList.toggle('active', mode === 'buyer');
+      $('#sellerPanel').classList.toggle('active', mode === 'seller');
+      localStorage.setItem('damanak_account_mode', mode);
+      if (save) api('/account/mode', {method:'PUT', body:JSON.stringify({active_mode:mode})}).catch(error => $('#pageMessage').textContent = error.message);
+    }
+    async function load() {
       try {
-        const x = await api('/auth/verify-nafath', { method: 'POST', body: JSON.stringify({ national_id: f.national_id.value }) });
-        m.textContent = `افتح تطبيق نفاذ واختر الرقم ${x.random}. رقم الطلب ${x.request_id}`;
-        localStorage.setItem('nafath_request', JSON.stringify(x));
-      } catch(e) { m.textContent = e.message; }
+        overview = await api('/account/overview');
+        const p = overview.profile || {};
+        $('#welcome').textContent = `هلا ${p.display_name || p.full_name || ''}`.trim();
+        $('#verification').textContent = p.nafath_verified ? 'حساب موثق ✓ — السحب متاح بعد تسجيل الآيبان' : 'حساب غير موثق — البيع والشراء متاحان، والسحب يحتاج توثيق';
+        $('#verification').classList.toggle('verified', !!p.nafath_verified);
+        for (const field of ['full_name','display_name','phone','city','store_name','support_email','store_description']) $('#profileForm')[field].value = p[field] || '';
+        const buyerRows = overview.buyer.transactions || [], sellerRows = overview.seller.transactions || [], products = overview.seller.products || [];
+        $('#buyerTotal').textContent = buyerRows.length;
+        $('#buyerActive').textContent = buyerRows.filter(x => ['pending_payment','funds_held','shipped'].includes(x.status)).length;
+        $('#buyerInspection').textContent = buyerRows.filter(x => x.status === 'shipped').length;
+        $('#buyerCompleted').textContent = buyerRows.filter(x => x.status === 'completed').length;
+        $('#buyerOrders').innerHTML = orderTable(buyerRows);
+        $('#sellerProducts').textContent = products.length;
+        $('#sellerCompleted').textContent = overview.seller.completed_sales || 0;
+        $('#pendingBalance').textContent = money(overview.seller.pending_balance);
+        $('#availableBalance').textContent = money(overview.seller.available_balance);
+        $('#sellerProductList').innerHTML = productTable(products);
+        $('#sellerOrders').innerHTML = orderTable(sellerRows);
+        activateMode(localStorage.getItem('damanak_account_mode') || p.active_mode || 'buyer');
+      } catch (error) { $('#pageMessage').textContent = error.message; }
+    }
+    document.querySelectorAll('[data-mode]').forEach(button => button.onclick = () => activateMode(button.dataset.mode, true));
+    $('#profileForm').onsubmit = async event => {
+      event.preventDefault();
+      try { const data = Object.fromEntries(new FormData(event.currentTarget)); await api('/account', {method:'PUT',body:JSON.stringify(data)}); $('#pageMessage').textContent = 'تم حفظ بياناتك بنجاح'; }
+      catch (error) { $('#pageMessage').textContent = error.message; }
     };
+    $('#nafath').onclick = async () => {
+      try { const result = await api('/auth/verify-nafath', {method:'POST',body:JSON.stringify({national_id:$('#nationalId').value})}); $('#nafathMessage').textContent = `افتح تطبيق نفاذ واختر الرقم ${result.random}. رقم الطلب ${result.request_id}`; }
+      catch (error) { $('#nafathMessage').textContent = error.message; }
+    };
+    load();
   </script>
 </body>
 </html>
