@@ -1,10 +1,5 @@
 import { api, money, token } from './api.js';
 
-// ==============================
-// عنوان الخادم الخلفي (غيّره حسب الحاجة)
-// ==============================
-const API_BASE_URL = 'https://sdgpt300.onrender.com';
-
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 
@@ -400,21 +395,11 @@ function initProductForm() {
       }
 
       const formData = new FormData(form);
-      const res = await fetch(`${API_BASE_URL}/api/products`, {
+      const result = await api('/products', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${tok}` },
-        body: formData
+        body: formData,
+        timeoutMs: 45000
       });
-
-      let result;
-      const text = await res.text();
-      try {
-        result = JSON.parse(text);
-      } catch {
-        throw new Error('الخادم أعاد استجابة غير صالحة (تأكد من تشغيل الخادم الخلفي)');
-      }
-
-      if (!res.ok) throw new Error(result.error || 'حدث خطأ أثناء النشر');
 
       toast('✅ تم نشر الإعلان بنجاح!', 'success');
       form.reset();
