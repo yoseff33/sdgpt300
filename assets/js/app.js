@@ -59,7 +59,7 @@ function shell() {
             <a class="icon-button" href="dashboard.html" aria-label="الإشعارات">${icon('bell')}<b class="badge" id="badge">0</b></a>
             <button class="icon-button" id="themeToggle" type="button" aria-label="تغيير المظهر">${icon('moon')}</button>
             ${loggedIn ? `<a class="account-link" href="account.html">${icon('user')}<span>حسابي</span></a>` : '<a class="login-link" href="login.html">دخول</a>'}
-            <a class="button button--primary add-listing" href="product.html">${icon('plus')}<span>أضف إعلانك</span></a>
+            <a class="button button--primary add-listing" href="create-product.html">${icon('plus')}<span>أضف إعلانك</span></a>
             <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="فتح القائمة" aria-expanded="false">${icon('menu')}</button>
           </div>
         </div>
@@ -72,7 +72,7 @@ function shell() {
       <nav class="mobile-bottom-nav" aria-label="التنقل السريع">
         <a href="index.html">${icon('shield')}<span>الرئيسية</span></a>
         <a href="index.html#market">${icon('search')}<span>السوق</span></a>
-        <a class="mobile-bottom-nav__add" href="product.html">${icon('plus')}<span>إعلان</span></a>
+        <a class="mobile-bottom-nav__add" href="create-product.html">${icon('plus')}<span>إعلان</span></a>
         <a href="dashboard.html">${icon('bell')}<span>صفقاتي</span></a>
         <a href="account.html">${icon('user')}<span>حسابي</span></a>
       </nav>`;
@@ -83,7 +83,7 @@ function shell() {
       <footer class="site-footer">
         <div class="container footer-grid">
           <div class="footer-brand"><a class="brand brand--footer" href="index.html"><span class="brand__mark">${icon('shield')}<b>ض</b></span><span class="brand__text"><strong>ضمانك</strong><small>سوق آمن</small></span></a><p>صفقات أوضح، ومبلغ محفوظ لين يتم الاستلام والتأكيد.</p><div class="footer-warning">لا تحول أي مبلغ خارج المنصة.</div></div>
-          <div><h3>المنصة</h3><ul><li><a href="index.html#market">السوق</a></li><li><a href="product.html">إضافة إعلان</a></li><li><a href="how-it-works.html">كيف تعمل؟</a></li><li><a href="index.html#calculator">حاسبة الرسوم</a></li></ul></div>
+          <div><h3>المنصة</h3><ul><li><a href="index.html#market">السوق</a></li><li><a href="create-product.html">إضافة إعلان</a></li><li><a href="how-it-works.html">كيف تعمل؟</a></li><li><a href="index.html#calculator">حاسبة الرسوم</a></li></ul></div>
           <div><h3>الدعم</h3><ul><li><a href="faq.html">مركز المساعدة</a></li><li><a href="contact.html">تواصل معنا</a></li><li><a href="contact.html">فتح تذكرة</a></li><li><a href="contact.html">الإبلاغ عن إعلان</a></li></ul></div>
           <div><h3>قانوني</h3><ul><li><a href="about.html">من نحن</a></li><li><a href="faq.html">الشروط والأحكام</a></li><li><a href="faq.html">سياسة الخصوصية</a></li><li><a href="faq.html">سياسة النزاعات</a></li></ul></div>
         </div>
@@ -405,7 +405,7 @@ function initProductForm() {
       form.reset();
       const msgDiv = document.getElementById('resultMessage');
       if (msgDiv) {
-        msgDiv.innerHTML = `<p style="color: #006c35; font-weight: 700;">✅ تم النشر! <a href="/product.html?id=${result.id}" target="_blank">عرض الإعلان</a></p>`;
+        msgDiv.innerHTML = `<p style="color: #006c35; font-weight: 700;">✅ تم النشر! <a href="product.html?id=${encodeURIComponent(result.id)}" target="_blank">عرض الإعلان</a></p>`;
       }
     } catch (error) {
       toast(error.message, 'error');
